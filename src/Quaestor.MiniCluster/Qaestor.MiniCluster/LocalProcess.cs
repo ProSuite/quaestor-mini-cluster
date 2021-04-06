@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
@@ -93,6 +94,8 @@ namespace Quaestor.MiniCluster
 
 			string commandLineArgs = string.Empty;
 
+			string executablePath = ExecutablePath;
+
 			try
 			{
 				if (Port < 0)
@@ -104,10 +107,12 @@ namespace Quaestor.MiniCluster
 					.Replace("{HostName}", HostName)
 					.Replace("{Port}", Port.ToString());
 
-				_logger.LogInformation("Starting {ExecutablePath} with parameters {CommandLineArguments}...",
-					ExecutablePath, commandLineArgs);
+				executablePath = GetActualExePath();
 
-				Process = ProcessUtils.StartProcess(ExecutablePath, commandLineArgs, false, true);
+				_logger.LogInformation("Starting {executablePath} with parameters {commandLineArgs}...",
+					executablePath, commandLineArgs);
+
+				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs, false, true);
 
 				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(5);
 
@@ -130,7 +135,7 @@ namespace Quaestor.MiniCluster
 
 				_logger.LogError(e,
 					"Error starting {ExecutablePath} with parameters {CommandLineArguments}: {errorMessage}",
-					ExecutablePath, commandLineArgs, errorMessage);
+					executablePath, commandLineArgs, errorMessage);
 
 				return false;
 			}
@@ -211,6 +216,39 @@ namespace Quaestor.MiniCluster
 			}
 
 			return result;
+		}
+
+		private string GetActualExePath()
+		{
+			string executablePath = ExecutablePath;
+
+			if (!File.Exists(executablePath))
+			{
+				_logger.LogDebug("{executablePath} was not found!", executablePath);
+
+				if (!Path.IsPathRooted(executablePath))
+				{
+					// It's a relative path that does not exist from the current dir:
+
+					Assembly exeAssembly = Assembly.GetEntryAssembly();
+
+					string exePath = exeAssembly?.Location;
+
+					if (exePath == null)
+					{
+						return executablePath;
+					}
+
+					string exeDir = Path.GetDirectoryName(exePath);
+
+					executablePath = Path.Combine(exeDir, executablePath);
+
+					_logger.LogDebug("Using relative path {executablePath} from executable...",
+						executablePath);
+				}
+			}
+
+			return executablePath;
 		}
 
 		private void EnsureDead(Process process)
