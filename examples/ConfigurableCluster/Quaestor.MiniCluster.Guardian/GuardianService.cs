@@ -26,6 +26,7 @@ namespace Quaestor.MiniCluster.Guardian
 				.GetSection(nameof(AgentConfiguration)).Get<List<AgentConfiguration>>();
 
 			_clusterConfig = new ClusterConfig();
+
 			configuration.GetSection(nameof(ClusterConfig)).Bind(_clusterConfig);
 		}
 

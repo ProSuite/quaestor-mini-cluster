@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 
@@ -37,6 +38,7 @@ namespace Quaestor.MiniCluster
 		public TimeSpan HeartBeatInterval => TimeSpan.FromSeconds(_clusterConfig.HeartBeatIntervalSeconds);
 
 		public TimeSpan MemberResponseTimeOut => TimeSpan.FromSeconds(_clusterConfig.MemberResponseTimeOutSeconds);
+
 		public TimeSpan MemberMaxShutdownTime => TimeSpan.FromSeconds(_clusterConfig.MemberMaxShutdownTimeSeconds);
 
 		public int MemberMaxStartupRetries => _clusterConfig.MemberMaxStartupRetries;
@@ -74,7 +76,10 @@ namespace Quaestor.MiniCluster
 		{
 			_heartbeat.ShutdownAsync();
 
-			foreach (var managedProcess in Members) managedProcess.Kill();
+			foreach (var managedProcess in Members)
+			{
+				managedProcess.Kill();
+			}
 		}
 
 		private async Task<bool> CareForUnhealthy(IManagedProcess process)
@@ -105,22 +110,34 @@ namespace Quaestor.MiniCluster
 				}
 			}
 
-			if (process.StartupTrialCount > MemberMaxStartupRetries)
+			if (process.StartupFailureCount > MemberMaxStartupRetries)
 				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}", process);
 			else
-				_ = process.StartAsync();
+				return await TryStart(process);
 
 			return true;
 		}
 
-		private async Task<bool> CareForUnavailable(IManagedProcess process)
+		private static async Task<bool> TryStart([NotNull] IManagedProcess process)
+		{
+			bool success = await process.StartAsync();
+
+			if (!success)
+			{
+				process.StartupFailureCount++;
+			}
+
+			return success;
+		}
+
+		private async Task<bool> CareForUnavailable([NotNull] IManagedProcess process)
 		{
 			_logger.LogInformation("(Re-)starting process due to request time-out: {process}", process);
 
-			if (process.StartupTrialCount > MemberMaxStartupRetries)
+			if (process.StartupFailureCount > MemberMaxStartupRetries)
 				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}", process);
 			else
-				_ = await process.StartAsync();
+				return await TryStart(process);
 
 			return true;
 		}
@@ -132,9 +149,11 @@ namespace Quaestor.MiniCluster
 				var processesCount = ProcessUtils.RunningProcessesCount(processName);
 
 				if (processesCount > 0)
+				{
 					_logger.LogWarning(
 						"{processesCount} potentially orphaned process(es) already running with the same name as {exePath}.",
 						processesCount, processName);
+				}
 			}
 		}
 	}

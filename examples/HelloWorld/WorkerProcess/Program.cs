@@ -3,12 +3,14 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
 using Grpc.HealthCheck;
+using JetBrains.Annotations;
 
 namespace WorkerProcess
 {
+	[UsedImplicitly]
 	internal class Program
 	{
-		const string ServiceName = "Worker";
+		const string _serviceName = "Worker";
 
 		static async Task Main(string[] args)
 		{
@@ -42,7 +44,7 @@ namespace WorkerProcess
 
 			var healthService = new HealthServiceImpl();
 
-			healthService.SetStatus(ServiceName, HealthCheckResponse.Types.ServingStatus.Serving);
+			healthService.SetStatus(_serviceName, HealthCheckResponse.Types.ServingStatus.Serving);
 
 			var server =
 				new Server
@@ -67,7 +69,7 @@ namespace WorkerProcess
 
 				Console.WriteLine("Setting service to NOT_SERVING.");
 
-				healthService.SetStatus(ServiceName, HealthCheckResponse.Types.ServingStatus.NotServing);
+				healthService.SetStatus(_serviceName, HealthCheckResponse.Types.ServingStatus.NotServing);
 			}
 
 			Console.WriteLine("Press any key to finish.");

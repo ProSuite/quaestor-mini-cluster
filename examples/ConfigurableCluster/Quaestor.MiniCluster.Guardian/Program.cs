@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +9,8 @@ using Quaestor.Environment;
 
 namespace Quaestor.MiniCluster.Guardian
 {
-	class Program
+	[UsedImplicitly]
+	internal class Program
 	{
 		static async Task Main(string[] args)
 		{

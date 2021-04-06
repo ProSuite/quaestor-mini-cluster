@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using JetBrains.Annotations;
 
 namespace Quaestor.MiniCluster
 {
@@ -17,14 +18,18 @@ namespace Quaestor.MiniCluster
 		/// <param name="createNoWindow"></param>
 		/// <param name="priorityClass">The process priority class.</param>
 		/// <returns></returns>
+		[NotNull]
 		public static Process StartProcess(
-			string fileName,
-			string arguments,
+			[CanBeNull] string fileName,
+			[CanBeNull] string arguments,
 			bool useShellExecute,
 			bool createNoWindow,
 			ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
 		{
-			if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
+			if (string.IsNullOrEmpty(fileName))
+			{
+				throw new ArgumentNullException(nameof(fileName));
+			}
 
 			var process = new Process
 			{

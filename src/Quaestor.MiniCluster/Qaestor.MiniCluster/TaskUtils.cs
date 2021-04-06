@@ -1,12 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Quaestor.MiniCluster
 {
 	public static class TaskUtils
 	{
-		public static async Task<TResult> TimeoutAfter<TResult>(Task<TResult> task, TimeSpan timeout)
+		[NotNull]
+		public static async Task<TResult> TimeoutAfter<TResult>([NotNull] Task<TResult> task,
+		                                                        TimeSpan timeout)
 		{
 			using (var timeoutCancellationTokenSource = new CancellationTokenSource())
 			{

@@ -1,12 +1,14 @@
 using System;
 using System.IO;
 using System.Reflection;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.MiniCluster;
 
 namespace HelloWorld
 {
+	[UsedImplicitly]
 	internal class Program
 	{
 		static void Main(string[] args)

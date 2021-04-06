@@ -10,9 +10,12 @@ using Quaestor.Environment;
 
 namespace Quaestor.MiniCluster
 {
+	/// <summary>
+	///     Process that can be started directly on the local machine.
+	/// </summary>
 	public class LocalProcess : IManagedProcess
 	{
-		private const string Localhost = "localhost";
+		private const string _localhost = "127.0.0.1";
 
 		private readonly ILogger _logger = Log.CreateLogger<LocalProcess>();
 
@@ -20,9 +23,9 @@ namespace Quaestor.MiniCluster
 
 		private Health.HealthClient _healthClient;
 
-		public LocalProcess(string hostName = Localhost,
-			int port = -1,
-			ChannelCredentials credentials = null)
+		public LocalProcess(string hostName = _localhost,
+		                    int port = -1,
+		                    ChannelCredentials credentials = null)
 		{
 			HostName = hostName;
 			Port = port;
@@ -62,7 +65,7 @@ namespace Quaestor.MiniCluster
 		/// </summary>
 		public bool MonitoringSuspended { get; set; }
 
-		public int StartupTrialCount { get; set; }
+		public int StartupFailureCount { get; set; }
 
 		public bool IsRunning => !Process?.HasExited ?? false;
 
@@ -85,8 +88,6 @@ namespace Quaestor.MiniCluster
 		public async Task<bool> StartAsync()
 		{
 			MonitoringSuspended = true;
-
-			StartupTrialCount++;
 
 			EnsureDead(Process);
 
@@ -161,8 +162,6 @@ namespace Quaestor.MiniCluster
 				// TODO: Send shut down signal
 
 				await Task.Delay(timeOut);
-
-				// Kill now?
 			}
 
 			return Process.HasExited;
