@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -18,8 +19,8 @@ namespace Quaestor.MiniCluster
 		private readonly Func<IManagedProcess, Task<bool>> _unhealthyProcedure;
 
 		public ClusterHeartBeat(Cluster cluster,
-			Func<IManagedProcess, Task<bool>> unhealthyProcedure,
-			Func<IManagedProcess, Task<bool>> unavailableProcedure)
+		                        Func<IManagedProcess, Task<bool>> unhealthyProcedure,
+		                        Func<IManagedProcess, Task<bool>> unavailableProcedure)
 		{
 			_cluster = cluster;
 			_unhealthyProcedure = unhealthyProcedure;
@@ -86,19 +87,23 @@ namespace Quaestor.MiniCluster
 					return;
 				}
 
+				Stopwatch watch = Stopwatch.StartNew();
+
 				var healthy = await TaskUtils.TimeoutAfter(member.IsServingAsync(), timeout);
 
 				if (!healthy)
 				{
 					_logger.LogWarning(
-						"Heartbeat detected for {member} but some services are un-healthy.", member);
+						"Heartbeat detected for {member} but some services are un-healthy [{milliseconds}ms].",
+						member, watch.ElapsedMilliseconds);
 
 					_unhealthyProcedure?.Invoke(member);
 				}
 				else
 				{
 					_logger.LogInformation(
-						"Heartbeat detected for {member}. All services are healthy.", member);
+						"Heartbeat detected for {member}. All services are healthy [{milliseconds}ms].",
+						member, watch.ElapsedMilliseconds);
 				}
 			}
 			catch (TimeoutException)
