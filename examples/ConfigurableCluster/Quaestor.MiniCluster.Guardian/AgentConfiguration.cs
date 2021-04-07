@@ -43,6 +43,6 @@ namespace Quaestor.MiniCluster.Guardian
 		///     The list of services that are hosted by the configured process(es). The health check is
 		///     performed for each service name using the GRPC Health Checking Protocol.
 		/// </summary>
-		public IList<string> ServiceNames { get; set; }
+		public List<string> ServiceNames { get; set; }
 	}
 }

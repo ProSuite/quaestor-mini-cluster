@@ -13,7 +13,7 @@ namespace Quaestor.MiniCluster.Guardian
 	{
 		private readonly ILogger<GuardianService> _logger;
 
-		private readonly List<AgentConfiguration> _agentConfigurations;
+		private readonly IList<AgentConfiguration> _agentConfigurations;
 		private readonly ClusterConfig _clusterConfig;
 
 		private Cluster _cluster;
@@ -22,8 +22,14 @@ namespace Quaestor.MiniCluster.Guardian
 		{
 			_logger = logger;
 
-			_agentConfigurations = configuration
-				.GetSection(nameof(AgentConfiguration)).Get<List<AgentConfiguration>>();
+			var dictionary =
+				configuration.GetSection("agents").Get<Dictionary<string, AgentConfiguration>>();
+
+			_agentConfigurations = dictionary.Select(kvp =>
+			{
+				kvp.Value.AgentType = kvp.Key;
+				return kvp.Value;
+			}).ToList();
 
 			_clusterConfig = new ClusterConfig();
 

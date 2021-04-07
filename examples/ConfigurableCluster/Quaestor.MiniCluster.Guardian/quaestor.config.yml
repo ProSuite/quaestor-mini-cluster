@@ -1,0 +1,29 @@
+# Not supported (yet)
+bootstrapCluster: false
+
+# The configuration of the cluster management:
+clusterConfig:
+  name: Configurable Cluster of Local gRPC Processes
+  heartBeatIntervalSeconds: 31
+  memberResponseTimeOutSeconds: 6
+  memberMaxShutdownTimeSeconds: 44
+  memberMaxStartupRetries: 25
+# List of agents that are managed by the cluster
+agents:
+  Worker:
+    executablePath: ..\..\..\..\..\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
+    commandLineArguments: "{Port} 75"
+    hostName: 127.0.0.1
+    processCount: 6
+    ports: [  ]
+    serviceNames:
+    - Worker
+  Master:
+    executablePath: ..\..\..\..\..\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
+    commandLineArguments: "{Port} 125"
+    hostName: localhost
+    processCount: 1
+    ports:
+    - 9999
+    serviceNames:
+    - Worker

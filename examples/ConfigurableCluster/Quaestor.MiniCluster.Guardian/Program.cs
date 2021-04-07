@@ -53,10 +53,16 @@ namespace Quaestor.MiniCluster.Guardian
 
 						IHostEnvironment env = hostingContext.HostingEnvironment;
 
-						// TODO: Go back to XML to allow comments in config files
 						configuration
-							.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-							.AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
+							.AddYamlFile("quaestor.config.yml", optional: true, reloadOnChange: true)
+							.AddYamlFile($"quaestor.config.{env.EnvironmentName}.yml", true, true);
+
+						//configuration.AddEnvironmentVariables();
+
+						//if (args != null)
+						//{
+						//	configuration.AddCommandLine(args);
+						//}
 					})
 				.ConfigureServices((hostContext, services) =>
 				{
