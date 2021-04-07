@@ -209,10 +209,20 @@ namespace Quaestor.MiniCluster
 
 			foreach (string serviceName in ServiceNames)
 			{
-				var healthResponse =
-					await _healthClient.CheckAsync(new HealthCheckRequest {Service = serviceName});
+				try
+				{
+					var healthResponse =
+						await _healthClient.CheckAsync(new HealthCheckRequest {Service = serviceName});
 
-				result &= healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
+					result &= healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
+				}
+				catch (Exception e)
+				{
+					_logger.LogError(e, "Error checking health for service {serviceName} of {process}",
+						serviceName, this);
+
+					return false;
+				}
 			}
 
 			return result;
