@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.Core" Version="2.36.4" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.36.4" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
+    <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
+    <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />
+    <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
+    <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

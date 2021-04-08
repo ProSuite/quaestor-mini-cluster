@@ -255,7 +255,7 @@ namespace Quaestor.MiniCluster
 			{
 				_logger.LogDebug("{executablePath} was not found!", executablePath);
 
-				if (!Path.IsPathRooted(executablePath))
+				if (AssumeIsRelativePath(executablePath))
 				{
 					// It's a relative path that does not exist from the current dir:
 
@@ -278,6 +278,17 @@ namespace Quaestor.MiniCluster
 			}
 
 			return executablePath;
+		}
+
+		private static bool AssumeIsRelativePath(string executablePath)
+		{
+			if (Path.IsPathRooted(executablePath))
+			{
+				return false;
+			}
+
+			return executablePath.StartsWith(".") ||
+			       executablePath.StartsWith(Path.DirectorySeparatorChar.ToString());
 		}
 
 		private void EnsureDead(Process process)

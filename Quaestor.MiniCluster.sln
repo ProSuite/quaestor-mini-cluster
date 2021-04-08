@@ -11,8 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C12CA5A1-BC5
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Environment", "src\Quaestor.Environment\Quaestor.Environment.csproj", "{8F677CAD-A8DF-473E-B714-131027F37C8F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.MiniCluster", "src\Quaestor.MiniCluster\Qaestor.MiniCluster\Quaestor.MiniCluster.csproj", "{EF48E94A-9CEE-45DD-B0A0-5D3C7C1D6F98}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkerProcess", "examples\HelloWorld\WorkerProcess\WorkerProcess.csproj", "{26527529-B0AA-4768-8ACF-3BBA8CD0101B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld", "examples\HelloWorld\HelloWorld\HelloWorld.csproj", "{F06BE977-A0DF-4FDE-AFF0-329FEECB18C9}"
@@ -25,9 +23,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.KeyValueStore", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{42F39A18-2681-4FB2-B73D-A44A6E2EC068}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.KeyValueStore.Tests", "tests\Quaestor.KeyValueStore.Tests\Quaestor.KeyValueStore.Tests.csproj", "{EBEAFE62-DC9A-43DB-B4AC-95743288457C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.KeyValueStore.Tests", "tests\Quaestor.KeyValueStore.Tests\Quaestor.KeyValueStore.Tests.csproj", "{EBEAFE62-DC9A-43DB-B4AC-95743288457C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.Utilities", "src\Quaestor.Utilities\Quaestor.Utilities.csproj", "{27CD6061-BCB1-4803-9397-00E48D042B48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Utilities", "src\Quaestor.Utilities\Quaestor.Utilities.csproj", "{27CD6061-BCB1-4803-9397-00E48D042B48}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices.Definitions", "src\Quaestor.Microservices.Definitions\Quaestor.Microservices.Definitions.csproj", "{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices", "src\Quaestor.Microservices\Quaestor.Microservices.csproj", "{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.MiniCluster", "src\Quaestor.MiniCluster\Quaestor.MiniCluster.csproj", "{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +43,6 @@ Global
 		{8F677CAD-A8DF-473E-B714-131027F37C8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F677CAD-A8DF-473E-B714-131027F37C8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F677CAD-A8DF-473E-B714-131027F37C8F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EF48E94A-9CEE-45DD-B0A0-5D3C7C1D6F98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EF48E94A-9CEE-45DD-B0A0-5D3C7C1D6F98}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EF48E94A-9CEE-45DD-B0A0-5D3C7C1D6F98}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EF48E94A-9CEE-45DD-B0A0-5D3C7C1D6F98}.Release|Any CPU.Build.0 = Release|Any CPU
 		{26527529-B0AA-4768-8ACF-3BBA8CD0101B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{26527529-B0AA-4768-8ACF-3BBA8CD0101B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26527529-B0AA-4768-8ACF-3BBA8CD0101B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -67,6 +67,18 @@ Global
 		{27CD6061-BCB1-4803-9397-00E48D042B48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27CD6061-BCB1-4803-9397-00E48D042B48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27CD6061-BCB1-4803-9397-00E48D042B48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,7 +86,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{583579C2-6BC5-4CF2-9D95-276D2C6973F8} = {918331E4-8260-40B7-AF84-D1AFDE7C82A0}
 		{8F677CAD-A8DF-473E-B714-131027F37C8F} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
-		{EF48E94A-9CEE-45DD-B0A0-5D3C7C1D6F98} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{26527529-B0AA-4768-8ACF-3BBA8CD0101B} = {583579C2-6BC5-4CF2-9D95-276D2C6973F8}
 		{F06BE977-A0DF-4FDE-AFF0-329FEECB18C9} = {583579C2-6BC5-4CF2-9D95-276D2C6973F8}
 		{DBC52652-36F2-412D-970A-9E2555483D54} = {918331E4-8260-40B7-AF84-D1AFDE7C82A0}
@@ -82,6 +93,9 @@ Global
 		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{EBEAFE62-DC9A-43DB-B4AC-95743288457C} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 		{27CD6061-BCB1-4803-9397-00E48D042B48} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D4A5BDA-D4FC-4BDA-98A4-6C2669B5FFC0}

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Quaestor.MiniCluster\Qaestor.MiniCluster\Quaestor.MiniCluster.csproj" />
+    <ProjectReference Include="..\..\..\src\Quaestor.MiniCluster\Quaestor.MiniCluster.csproj" />
   </ItemGroup>
 
 </Project>
