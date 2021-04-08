@@ -8,13 +8,14 @@ using Grpc.Core;
 using Grpc.Health.V1;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
+using Quaestor.Utilities;
 
 namespace Quaestor.MiniCluster
 {
 	/// <summary>
 	///     Process that can be started directly on the local machine.
 	/// </summary>
-	public class LocalProcess : IManagedProcess
+	public class LocalProcess : IManagedProcess, IServerProcess
 	{
 		private const string _localhost = "127.0.0.1";
 
@@ -109,7 +110,8 @@ namespace Quaestor.MiniCluster
 
 				executablePath = GetActualExePath();
 
-				_logger.LogInformation("Starting {executablePath} with parameters {commandLineArgs}...",
+				_logger.LogInformation(
+					"Starting {executablePath} with parameters {commandLineArgs}...",
 					executablePath, commandLineArgs);
 
 				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs, false, true);
@@ -156,7 +158,8 @@ namespace Quaestor.MiniCluster
 
 			if (PrioritizeAvailability)
 			{
-				_logger.LogDebug("Process {process} is killed to prioritize availability...)", this);
+				_logger.LogDebug("Process {process} is killed to prioritize availability...)",
+					this);
 
 				Kill();
 			}
@@ -203,26 +206,42 @@ namespace Quaestor.MiniCluster
 
 		private async Task<bool> AreServicesHealthy()
 		{
-			if (ServiceNames.Count == 0) _logger.LogWarning("No service names to check");
+			if (ServiceNames.Count == 0)
+			{
+				_logger.LogInformation("No service names to check, using empty string.");
 
-			bool result = true;
+				return await CheckHealth(string.Empty);
+			}
 
 			foreach (string serviceName in ServiceNames)
 			{
-				try
-				{
-					var healthResponse =
-						await _healthClient.CheckAsync(new HealthCheckRequest {Service = serviceName});
+				bool healthy = await CheckHealth(serviceName);
 
-					result &= healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
-				}
-				catch (Exception e)
+				if (!healthy)
 				{
-					_logger.LogError(e, "Error checking health for service {serviceName} of {process}",
-						serviceName, this);
-
 					return false;
 				}
+			}
+
+			return true;
+		}
+
+		private async Task<bool> CheckHealth(string serviceName)
+		{
+			bool result;
+			try
+			{
+				var healthResponse =
+					await _healthClient.CheckAsync(new HealthCheckRequest {Service = serviceName});
+
+				result = healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
+			}
+			catch (Exception e)
+			{
+				_logger.LogError(e, "Error checking health for service {serviceName} of {process}",
+					serviceName, this);
+
+				return false;
 			}
 
 			return result;

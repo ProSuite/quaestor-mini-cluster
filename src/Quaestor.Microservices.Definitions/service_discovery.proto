@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+/**
+ * The discovery service definition and its associated request and 
+ * response message types.
+ *
+ */
+
+package Quaestor.Microservices.Definitions;
+
+/**
+  * The service discovery service.
+  */
+service ServiceDiscoveryGrpc {
+
+	/**
+    * Provide all service locations for a given service name, ordered randomly.
+    */
+	rpc LocateServices(LocateServicesRequest) returns (LocateServicesResponse) {}
+}
+
+/**
+  * The service discovery request.
+  */
+message LocateServicesRequest {
+
+	/** The global scope of the service (e.g. cluster name). */
+	string scope = 1;
+
+	/** The service name. */
+	string service_name = 2;
+}
+
+/**
+  * The service discovery response.
+  */
+message LocateServicesResponse {
+
+	/** The set of service locations. */
+	repeated ServiceLocationMsg service_locations = 1;
+}
+
+/**
+  * The service location message.
+  */
+message ServiceLocationMsg {
+
+	/** The global scope of the service (e.g. cluster name). */
+	string scope = 1;
+
+	/** The service name. */
+	string service_name = 2;
+
+	/** The host name. */
+	string host_name = 3;
+
+	/** The host name. */
+	int32 port = 4;
+}

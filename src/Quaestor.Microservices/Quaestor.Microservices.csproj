@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.15.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
+    <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
+    <ProjectReference Include="..\Quaestor.Microservices.Definitions\Quaestor.Microservices.Definitions.csproj" />
+  </ItemGroup>
+
+</Project>

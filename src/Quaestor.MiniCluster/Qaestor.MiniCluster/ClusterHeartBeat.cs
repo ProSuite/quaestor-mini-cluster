@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
+using Quaestor.Utilities;
 
 namespace Quaestor.MiniCluster
 {
 	public class ClusterHeartBeat
 	{
-		private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+		private readonly CancellationTokenSource
+			_cancellationSource = new CancellationTokenSource();
 
 		private readonly Cluster _cluster;
 		private readonly ILogger _logger = Log.CreateLogger<ClusterHeartBeat>();
@@ -56,7 +58,8 @@ namespace Quaestor.MiniCluster
 					{
 						if (member.MonitoringSuspended)
 						{
-							_logger.LogInformation($"Monitoring is suspended for {member} (probably shutting down).");
+							_logger.LogInformation(
+								$"Monitoring is suspended for {member} (probably shutting down).");
 
 							continue;
 						}
@@ -114,13 +117,15 @@ namespace Quaestor.MiniCluster
 			}
 			catch (RpcException rpcException)
 			{
-				_logger.LogWarning(rpcException, "RPC error in heartbeat detection for {member}: {exceptionMessage}",
+				_logger.LogWarning(rpcException,
+					"RPC error in heartbeat detection for {member}: {exceptionMessage}",
 					member, rpcException.Message);
 				_unavailableProcedure?.Invoke(member);
 			}
 			catch (Exception e)
 			{
-				_logger.LogError(e, "Error in heartbeat detection for {member}: {exceptionMessage}", member, e.Message);
+				_logger.LogError(e, "Error in heartbeat detection for {member}: {exceptionMessage}",
+					member, e.Message);
 			}
 		}
 	}

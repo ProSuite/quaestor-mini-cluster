@@ -27,7 +27,8 @@ namespace Quaestor.MiniCluster
 		int StartupFailureCount { get; set; }
 
 		/// <summary>
-		///     Whether the process is serving as per GRPC health check protocol.
+		///     Whether the process is serving as per GRPC health check protocol. If false is returned,
+		///     the process can be re-started by the cluster.
 		/// </summary>
 		/// <returns></returns>
 		Task<bool> IsServingAsync();

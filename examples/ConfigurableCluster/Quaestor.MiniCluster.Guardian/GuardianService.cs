@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quaestor.KeyValueStore;
 
 namespace Quaestor.MiniCluster.Guardian
 {
@@ -51,7 +52,13 @@ namespace Quaestor.MiniCluster.Guardian
 				return Task.CompletedTask;
 			}
 
-			_cluster = new Cluster(_clusterConfig);
+			var serviceRegistry =
+				new ServiceRegistry(new LocalKeyValueStore(), _clusterConfig.Name);
+
+			_cluster = new Cluster(_clusterConfig)
+			{
+				ServiceRegistrar = new ServiceRegistrar(serviceRegistry)
+			};
 
 			foreach (AgentConfiguration agentConfiguration in _agentConfigurations)
 			{
@@ -81,12 +88,14 @@ namespace Quaestor.MiniCluster.Guardian
 			base.Dispose();
 		}
 
-		private static IEnumerable<LocalProcess> GetManagedProcesses(AgentConfiguration agentConfiguration)
+		private static IEnumerable<LocalProcess> GetManagedProcesses(
+			AgentConfiguration agentConfiguration)
 		{
 			if (agentConfiguration.Ports == null || agentConfiguration.Ports.Count == 0)
 			{
 				// No ports specified, use ephemeral ports
-				agentConfiguration.Ports = new List<int>(Enumerable.Repeat(-1, agentConfiguration.ProcessCount));
+				agentConfiguration.Ports =
+					new List<int>(Enumerable.Repeat(-1, agentConfiguration.ProcessCount));
 			}
 
 			if (agentConfiguration.Ports.Count != agentConfiguration.ProcessCount)
@@ -107,9 +116,12 @@ namespace Quaestor.MiniCluster.Guardian
 
 				managedProcess.CommandLineArguments = agentConfiguration.CommandLineArguments;
 
-				foreach (string serviceName in agentConfiguration.ServiceNames)
+				if (agentConfiguration.ServiceNames != null)
 				{
-					managedProcess.ServiceNames.Add(serviceName);
+					foreach (string serviceName in agentConfiguration.ServiceNames)
+					{
+						managedProcess.ServiceNames.Add(serviceName);
+					}
 				}
 
 				yield return managedProcess;

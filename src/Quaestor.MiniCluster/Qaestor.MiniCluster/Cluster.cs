@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
+using Quaestor.Utilities;
 
 namespace Quaestor.MiniCluster
 {
@@ -31,15 +32,20 @@ namespace Quaestor.MiniCluster
 			_clusterConfig = clusterConfig;
 		}
 
+		public ServiceRegistrar ServiceRegistrar { get; set; }
+
 		public string Name { get; }
 
 		public IReadOnlyCollection<IManagedProcess> Members => _managedProcesses.AsReadOnly();
 
-		public TimeSpan HeartBeatInterval => TimeSpan.FromSeconds(_clusterConfig.HeartBeatIntervalSeconds);
+		public TimeSpan HeartBeatInterval =>
+			TimeSpan.FromSeconds(_clusterConfig.HeartBeatIntervalSeconds);
 
-		public TimeSpan MemberResponseTimeOut => TimeSpan.FromSeconds(_clusterConfig.MemberResponseTimeOutSeconds);
+		public TimeSpan MemberResponseTimeOut =>
+			TimeSpan.FromSeconds(_clusterConfig.MemberResponseTimeOutSeconds);
 
-		public TimeSpan MemberMaxShutdownTime => TimeSpan.FromSeconds(_clusterConfig.MemberMaxShutdownTimeSeconds);
+		public TimeSpan MemberMaxShutdownTime =>
+			TimeSpan.FromSeconds(_clusterConfig.MemberMaxShutdownTimeSeconds);
 
 		public int MemberMaxStartupRetries => _clusterConfig.MemberMaxStartupRetries;
 
@@ -67,7 +73,13 @@ namespace Quaestor.MiniCluster
 		{
 			await _heartbeat.ShutdownAsync();
 
-			var shutDownResults = await Task.WhenAll(Members.Select(m => m.TryShutdownAsync(timeout)));
+			var shutDownResults = await Task.WhenAll(Members.Select(m =>
+			{
+				if (m is IServerProcess serverProcess)
+					ServiceRegistrar?.EnsureRemoved(serverProcess);
+
+				return m.TryShutdownAsync(timeout);
+			}));
 
 			return shutDownResults.All(r => r);
 		}
@@ -76,9 +88,14 @@ namespace Quaestor.MiniCluster
 		{
 			_heartbeat.ShutdownAsync();
 
-			foreach (var managedProcess in Members)
+			foreach (var process in Members)
 			{
-				managedProcess.Kill();
+				if (process is IServerProcess serverProcess)
+				{
+					ServiceRegistrar?.EnsureRemoved(serverProcess);
+				}
+
+				process.Kill();
 			}
 		}
 
@@ -86,13 +103,19 @@ namespace Quaestor.MiniCluster
 		{
 			// TODO: Consider adding a new process while still shutting down, but only if ephemeral ports are used
 
-			_logger.LogInformation("(Re-)starting process with status 'not serving': {process}", process);
+			_logger.LogInformation("(Re-)starting process with status 'not serving': {process}",
+				process);
 
 			if (process.IsRunning)
 			{
 				process.MonitoringSuspended = true;
 				try
 				{
+					if (process is IServerProcess serverProcess)
+					{
+						ServiceRegistrar?.EnsureRemoved(serverProcess);
+					}
+
 					var isShutDown = await process.TryShutdownAsync(MemberMaxShutdownTime);
 
 					if (!isShutDown)
@@ -111,14 +134,19 @@ namespace Quaestor.MiniCluster
 			}
 
 			if (process.StartupFailureCount > MemberMaxStartupRetries)
-				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}", process);
+			{
+				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}",
+					process);
+			}
 			else
+			{
 				return await TryStart(process);
+			}
 
 			return true;
 		}
 
-		private static async Task<bool> TryStart([NotNull] IManagedProcess process)
+		private async Task<bool> TryStart([NotNull] IManagedProcess process)
 		{
 			bool success = await process.StartAsync();
 
@@ -126,18 +154,33 @@ namespace Quaestor.MiniCluster
 			{
 				process.StartupFailureCount++;
 			}
+			else if (process is IServerProcess serverProcess)
+			{
+				ServiceRegistrar?.Add(serverProcess);
+			}
 
 			return success;
 		}
 
 		private async Task<bool> CareForUnavailable([NotNull] IManagedProcess process)
 		{
-			_logger.LogInformation("(Re-)starting process due to request time-out: {process}", process);
+			_logger.LogInformation("(Re-)starting process due to request time-out: {process}",
+				process);
+
+			if (process is IServerProcess serverProcess)
+			{
+				ServiceRegistrar?.EnsureRemoved(serverProcess);
+			}
 
 			if (process.StartupFailureCount > MemberMaxStartupRetries)
-				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}", process);
+			{
+				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}",
+					process);
+			}
 			else
+			{
 				return await TryStart(process);
+			}
 
 			return true;
 		}
