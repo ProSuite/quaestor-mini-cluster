@@ -19,7 +19,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld", "examples\Hell
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConfigurableCluster", "ConfigurableCluster", "{DBC52652-36F2-412D-970A-9E2555483D54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.MiniCluster.Guardian", "examples\ConfigurableCluster\Quaestor.MiniCluster.Guardian\Quaestor.MiniCluster.Guardian.csproj", "{6D42DD63-C887-4379-A95B-3664080B207F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.MiniCluster.Guardian", "examples\ConfigurableCluster\Quaestor.MiniCluster.Guardian\Quaestor.MiniCluster.Guardian.csproj", "{6D42DD63-C887-4379-A95B-3664080B207F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.KeyValueStore", "src\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj", "{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{42F39A18-2681-4FB2-B73D-A44A6E2EC068}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.KeyValueStore.Tests", "tests\Quaestor.KeyValueStore.Tests\Quaestor.KeyValueStore.Tests.csproj", "{EBEAFE62-DC9A-43DB-B4AC-95743288457C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.Utilities", "src\Quaestor.Utilities\Quaestor.Utilities.csproj", "{27CD6061-BCB1-4803-9397-00E48D042B48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +55,18 @@ Global
 		{6D42DD63-C887-4379-A95B-3664080B207F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D42DD63-C887-4379-A95B-3664080B207F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D42DD63-C887-4379-A95B-3664080B207F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBEAFE62-DC9A-43DB-B4AC-95743288457C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBEAFE62-DC9A-43DB-B4AC-95743288457C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBEAFE62-DC9A-43DB-B4AC-95743288457C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBEAFE62-DC9A-43DB-B4AC-95743288457C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27CD6061-BCB1-4803-9397-00E48D042B48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27CD6061-BCB1-4803-9397-00E48D042B48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27CD6061-BCB1-4803-9397-00E48D042B48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27CD6061-BCB1-4803-9397-00E48D042B48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +79,9 @@ Global
 		{F06BE977-A0DF-4FDE-AFF0-329FEECB18C9} = {583579C2-6BC5-4CF2-9D95-276D2C6973F8}
 		{DBC52652-36F2-412D-970A-9E2555483D54} = {918331E4-8260-40B7-AF84-D1AFDE7C82A0}
 		{6D42DD63-C887-4379-A95B-3664080B207F} = {DBC52652-36F2-412D-970A-9E2555483D54}
+		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{EBEAFE62-DC9A-43DB-B4AC-95743288457C} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
+		{27CD6061-BCB1-4803-9397-00E48D042B48} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D4A5BDA-D4FC-4BDA-98A4-6C2669B5FFC0}

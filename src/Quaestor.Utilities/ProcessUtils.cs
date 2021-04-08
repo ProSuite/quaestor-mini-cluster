@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using JetBrains.Annotations;
 
-namespace Quaestor.MiniCluster
+namespace Quaestor.Utilities
 {
 	public static class ProcessUtils
 	{

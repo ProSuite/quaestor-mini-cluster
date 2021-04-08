@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace Quaestor.MiniCluster
+namespace Quaestor.Utilities
 {
 	public static class TaskUtils
 	{
@@ -13,7 +13,8 @@ namespace Quaestor.MiniCluster
 		{
 			using (var timeoutCancellationTokenSource = new CancellationTokenSource())
 			{
-				var completedTask = await Task.WhenAny(task, Task.Delay(timeout, timeoutCancellationTokenSource.Token));
+				var completedTask = await Task.WhenAny(task,
+					Task.Delay(timeout, timeoutCancellationTokenSource.Token));
 
 				if (completedTask == task)
 				{

@@ -5,7 +5,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 
-namespace Quaestor.MiniCluster
+namespace Quaestor.Utilities
 {
 	public static class GrpcUtils
 	{
