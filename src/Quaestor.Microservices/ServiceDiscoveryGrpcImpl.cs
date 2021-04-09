@@ -7,7 +7,7 @@ using Quaestor.Environment;
 using Quaestor.KeyValueStore;
 using Quaestor.Microservices.Definitions;
 
-namespace Quaestor.Microservices.Discovery
+namespace Quaestor.Microservices
 {
 	public class ServiceDiscoveryGrpcImpl : ServiceDiscoveryGrpc.ServiceDiscoveryGrpcBase
 	{

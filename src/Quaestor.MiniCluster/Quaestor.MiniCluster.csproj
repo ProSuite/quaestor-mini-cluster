@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
     <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
     <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />
     <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
