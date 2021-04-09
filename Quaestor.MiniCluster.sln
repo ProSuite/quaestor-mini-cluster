@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.MiniCluster", "src\Quaestor.MiniCluster\Quaestor.MiniCluster.csproj", "{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.Microservices.Tests", "tests\Quaestor.Microservices.Tests\Quaestor.Microservices.Tests.csproj", "{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,10 @@ Global
 		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,6 +102,7 @@ Global
 		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D4A5BDA-D4FC-4BDA-98A4-6C2669B5FFC0}

@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Protobuf Include="load_reporting.proto" />
     <Protobuf Include="service_discovery.proto" />
   </ItemGroup>
 

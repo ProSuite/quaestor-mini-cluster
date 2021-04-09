@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+/**
+ * The load report service definition and its associated request and 
+ * response message types.
+ *
+ */
+
+package Quaestor.Microservices.Definitions;
+
+/**
+  * The load report service.
+  */
+service LoadReportingGrpc {
+
+	/**
+    * Provide server load for a given service name.
+    */
+	rpc ReportLoad(LoadReportRequest) returns (LoadReportResponse) {}
+}
+
+/**
+  * The load report request.
+  */
+message LoadReportRequest {
+
+	/** The global scope of the service (e.g. cluster name). */
+	string scope = 1;
+
+	/** The service name. */
+	string service_name = 2;
+}
+
+/**
+  * The load report response.
+  */
+message LoadReportResponse {
+
+	/** The server statistics. */
+	ServerStats server_stats = 1;
+
+	/** The client request statistics. */
+	ClientStats client_stats = 2;
+}
+
+/**
+  * The server statistics.
+  */
+message ServerStats {
+
+	/** The maximum number of concurrent requests. Not necessarily a hard limit. */
+	int32 request_capacity = 1;
+
+	/** The number of requests currently being processed. */
+	int32 current_requests = 2;
+
+	/** The averate CPU usage for this process (1 is 100%) since the last report. */
+	double cpu_usage = 3;
+}
+
+/**
+  * The client request statistics.
+  */
+message ClientStats {
+
+	/** The time of creation or the last report. */
+	int64 timestamp_ticks = 1;
+
+	/** The number of requests that have been started since the last report. */
+	int64 num_calls_started = 2;
+
+	/** The number of requests that have been finished since the last report. */
+	int64 num_calls_finished = 3;
+}
