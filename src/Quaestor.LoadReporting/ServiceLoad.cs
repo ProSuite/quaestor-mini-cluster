@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using JetBrains.Annotations;
 
-namespace Quaestor.Microservices
+namespace Quaestor.LoadReporting
 {
 	public class ServiceLoad
 	{

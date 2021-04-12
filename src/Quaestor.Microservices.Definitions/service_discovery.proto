@@ -9,14 +9,21 @@ syntax = "proto3";
 package Quaestor.Microservices.Definitions;
 
 /**
-  * The service discovery service.
+  * A service discovery and one-arm load balancing service.
   */
 service ServiceDiscoveryGrpc {
 
 	/**
-    * Provide all service locations for a given service name, ordered randomly.
+    * Provide the service locations for a given service name, ordered randomly.
     */
 	rpc LocateServices(LocateServicesRequest) returns (LocateServicesResponse) {}
+
+	/**
+    * Provide the best service locations for a given service based on the 
+		  provided load reports of the respective services, ordered according to the 
+			implemented load balancing algorithm.
+    */
+	rpc LocateTopServices(LocateServicesRequest) returns (LocateServicesResponse) {}
 }
 
 /**
@@ -29,6 +36,9 @@ message LocateServicesRequest {
 
 	/** The service name. */
 	string service_name = 2;
+
+	/** The maximum number of services to return. */
+	int32 max_count = 3;
 }
 
 /**

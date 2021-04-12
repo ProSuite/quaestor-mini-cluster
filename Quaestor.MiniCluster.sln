@@ -33,7 +33,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.MiniCluster", "src\Quaestor.MiniCluster\Quaestor.MiniCluster.csproj", "{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.Microservices.Tests", "tests\Quaestor.Microservices.Tests\Quaestor.Microservices.Tests.csproj", "{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices.Tests", "tests\Quaestor.Microservices.Tests\Quaestor.Microservices.Tests.csproj", "{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.LoadReporting", "src\Quaestor.LoadReporting\Quaestor.LoadReporting.csproj", "{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.LoadReporting.Tests", "tests\Quaestor.LoadReporting.Tests\Quaestor.LoadReporting.Tests.csproj", "{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,6 +89,14 @@ Global
 		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -103,6 +115,8 @@ Global
 		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
+		{0B35596F-E2BE-4F96-8588-D101A7C6EDC0} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D4A5BDA-D4FC-4BDA-98A4-6C2669B5FFC0}

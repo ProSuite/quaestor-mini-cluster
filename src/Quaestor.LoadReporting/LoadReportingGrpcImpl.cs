@@ -5,7 +5,7 @@ using Grpc.Core;
 using JetBrains.Annotations;
 using Quaestor.Microservices.Definitions;
 
-namespace Quaestor.Microservices
+namespace Quaestor.LoadReporting
 {
 	public class LoadReportingGrpcImpl : LoadReportingGrpc.LoadReportingGrpcBase
 	{

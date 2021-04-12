@@ -4,27 +4,28 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>0.0.1</Version>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>The ProSuite Authors</Authors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Quaestor.MiniCluster.Key.snk</AssemblyOriginatorKeyFile>
-    <Description>The quaestor service definitions for load reporting, service discovery and load balancing.</Description>
+    <Description>The quaestor load reporting API.</Description>
     <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Company />
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.14" />
+    <PackageReference Include="Google.Protobuf" Version="3.13" />
     <PackageReference Include="Grpc" Version="2.34.0" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.34.0" />
     <PackageReference Include="Grpc.Tools" Version="2.34.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="service_discovery.proto" />
+    <Protobuf Include="load_reporting.proto" />
   </ItemGroup>
 
   <ItemGroup>
