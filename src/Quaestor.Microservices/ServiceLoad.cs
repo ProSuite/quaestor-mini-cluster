@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using JetBrains.Annotations;
 
 namespace Quaestor.Microservices
 {
@@ -25,6 +26,20 @@ namespace Quaestor.Microservices
 		public int ClientCallsStarted { get; set; }
 		public int ClientCallsFinished { get; set; }
 		public DateTime ReportStart { get; private set; }
+
+		[PublicAPI]
+		public void StartRequest()
+		{
+			CurrentProcessCount++;
+			ClientCallsStarted++;
+		}
+
+		[PublicAPI]
+		public void EndRequest()
+		{
+			CurrentProcessCount--;
+			ClientCallsFinished++;
+		}
 
 		public double GetCpuUsage()
 		{
