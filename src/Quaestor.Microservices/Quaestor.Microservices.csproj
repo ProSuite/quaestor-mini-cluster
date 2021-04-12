@@ -2,10 +2,20 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.0.1</Version>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>The ProSuite Authors</Authors>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Quaestor.MiniCluster.Key.snk</AssemblyOriginatorKeyFile>
+    <Description>The quaestor microservices for load reporting, service discovery and load balancing.</Description>
+    <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Company />
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.15.7" />
+    <PackageReference Include="Google.Protobuf" Version="3.14" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
   </ItemGroup>
 
@@ -13,6 +23,10 @@
     <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
     <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
     <ProjectReference Include="..\Quaestor.Microservices.Definitions\Quaestor.Microservices.Definitions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
