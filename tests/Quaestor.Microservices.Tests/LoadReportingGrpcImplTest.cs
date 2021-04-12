@@ -68,6 +68,17 @@ namespace Quaestor.Microservices.Tests
 			AssertCorrectReport(client, _actualLoad);
 		}
 
+		[Test]
+		public void CanGetExceptionForNonExistingService()
+		{
+			_actualLoad.CpuUsage = _actualLoad.GetCpuUsage();
+
+			LoadReportingGrpc.LoadReportingGrpcClient client = GetClient();
+
+			Assert.Throws<RpcException>(
+				() => client.ReportLoad(new LoadReportRequest {ServiceName = "Does not exist"}));
+		}
+
 		private static void AssertCorrectReport(LoadReportingGrpc.LoadReportingGrpcClient client,
 		                                        ServiceLoad actualLoad)
 		{

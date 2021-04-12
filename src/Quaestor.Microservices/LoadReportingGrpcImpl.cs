@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
-using Quaestor.Environment;
 using Quaestor.Microservices.Definitions;
 
 namespace Quaestor.Microservices
 {
 	public class LoadReportingGrpcImpl : LoadReportingGrpc.LoadReportingGrpcBase
 	{
-		private readonly ILogger<LoadReportingGrpcImpl> _logger =
-			Log.CreateLogger<LoadReportingGrpcImpl>();
-
 		private readonly Dictionary<string, ServiceLoad> _loadByService =
 			new Dictionary<string, ServiceLoad>();
 
@@ -31,30 +26,38 @@ namespace Quaestor.Microservices
 
 			try
 			{
-				if (_loadByService.TryGetValue(request.ServiceName, out var currentLoad))
+				if (!_loadByService.TryGetValue(request.ServiceName, out ServiceLoad currentLoad))
 				{
-					serverStats.RequestCapacity = currentLoad.ProcessCapacity;
-					serverStats.CurrentRequests = currentLoad.CurrentProcessCount;
-					serverStats.CpuUsage = currentLoad.CpuUsage;
-
-					clientStats.NumCallsFinished = currentLoad.ClientCallsFinished;
-					clientStats.NumCallsStarted = currentLoad.ClientCallsStarted;
-					clientStats.TimestampTicks = currentLoad.ReportStart.Ticks;
-
-					currentLoad.ResetClientStats();
+					// Unknown service;
+					return Task.FromException<LoadReportResponse>(
+						new RpcException(new Status(StatusCode.OutOfRange,
+							$"Service name {request.ServiceName} not found.")));
 				}
-				else
+
+				if (currentLoad == null)
 				{
 					// Unknown load or unknown service;
-					serverStats.RequestCapacity = -1;
-					serverStats.CurrentRequests = -1;
+					return Task.FromException<LoadReportResponse>(
+						new RpcException(new Status(StatusCode.OutOfRange,
+							$"Service {request.ServiceName} has no load.")));
 				}
+
+				serverStats.RequestCapacity = currentLoad.ProcessCapacity;
+				serverStats.CurrentRequests = currentLoad.CurrentProcessCount;
+				serverStats.CpuUsage = currentLoad.CpuUsage;
+
+				clientStats.NumCallsFinished = currentLoad.ClientCallsFinished;
+				clientStats.NumCallsStarted = currentLoad.ClientCallsStarted;
+				clientStats.TimestampTicks = currentLoad.ReportStart.Ticks;
+
+				currentLoad.ResetClientStats();
 			}
 			catch (Exception e)
 			{
-				_logger.LogError(e, "Error reporting load.");
+				var rpcException = new RpcException(
+					new Status(StatusCode.Internal, e.ToString()), e.Message);
 
-				return Task.FromException<LoadReportResponse>(e);
+				return Task.FromException<LoadReportResponse>(rpcException);
 			}
 
 			var result = new LoadReportResponse
