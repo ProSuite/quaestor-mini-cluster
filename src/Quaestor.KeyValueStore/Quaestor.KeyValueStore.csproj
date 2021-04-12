@@ -6,7 +6,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>The ProSuite Authors</Authors>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Quaestor.MiniCluster.Key.snk</AssemblyOriginatorKeyFile>
     <Description>The quaestor key-value store and service registry.</Description>
     <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>

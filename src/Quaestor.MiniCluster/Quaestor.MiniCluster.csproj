@@ -5,7 +5,7 @@
     <Version>0.0.1</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>The ProSuite Authors</Authors>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Quaestor.MiniCluster.Key.snk</AssemblyOriginatorKeyFile>
     <Description>The quaestor mini cluster.</Description>
     <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>
