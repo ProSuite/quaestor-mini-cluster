@@ -9,11 +9,11 @@ namespace Quaestor.LoadReporting
 {
 	public class LoadReportingGrpcImpl : LoadReportingGrpc.LoadReportingGrpcBase
 	{
-		private readonly Dictionary<string, ServiceLoad> _loadByService =
-			new Dictionary<string, ServiceLoad>();
+		private readonly Dictionary<string, IServiceLoad> _loadByService =
+			new Dictionary<string, IServiceLoad>();
 
 		public void AllowMonitoring([NotNull] string serviceName,
-		                            [NotNull] ServiceLoad serviceLoad)
+		                            [NotNull] IServiceLoad serviceLoad)
 		{
 			_loadByService.Add(serviceName, serviceLoad);
 		}
@@ -26,7 +26,7 @@ namespace Quaestor.LoadReporting
 
 			try
 			{
-				if (!_loadByService.TryGetValue(request.ServiceName, out ServiceLoad currentLoad))
+				if (!_loadByService.TryGetValue(request.ServiceName, out IServiceLoad currentLoad))
 				{
 					// Unknown service;
 					return Task.FromException<LoadReportResponse>(

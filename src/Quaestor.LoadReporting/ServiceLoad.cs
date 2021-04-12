@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Quaestor.LoadReporting
 {
-	public class ServiceLoad
+	public class ServiceLoad : IServiceLoad
 	{
 		DateTime? _lastGetCpuUsageTime;
 		private TimeSpan _lastTotalProcessorTime;
@@ -61,7 +61,7 @@ namespace Quaestor.LoadReporting
 					currentTime.Subtract(_lastGetCpuUsageTime.Value).TotalMilliseconds;
 
 				double cpuUsage = cpuMillisDelta / totalMillisDelta /
-				                  System.Environment.ProcessorCount;
+				                  Environment.ProcessorCount;
 
 				_lastGetCpuUsageTime = currentTime;
 				_lastTotalProcessorTime = currentTotalProcessorTime;
