@@ -5,16 +5,16 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.KeyValueStore;
-using Quaestor.Microservices.Definitions;
 
-namespace Quaestor.Microservices
+namespace Quaestor.LoadBalancing
 {
 	public class ServiceDiscoveryGrpcImpl : ServiceDiscoveryGrpc.ServiceDiscoveryGrpcBase
 	{
 		private readonly ServiceRegistry _serviceRegistry;
 
 		private static readonly Random _random = new Random();
-		private bool _lastRequestFailed = false;
+
+		private bool _lastRequestFailed;
 
 		private readonly ILogger<ServiceDiscoveryGrpcImpl> _logger =
 			Log.CreateLogger<ServiceDiscoveryGrpcImpl>();

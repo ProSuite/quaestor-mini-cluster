@@ -27,17 +27,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.KeyValueStore.Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Utilities", "src\Quaestor.Utilities\Quaestor.Utilities.csproj", "{27CD6061-BCB1-4803-9397-00E48D042B48}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices.Definitions", "src\Quaestor.Microservices.Definitions\Quaestor.Microservices.Definitions.csproj", "{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices", "src\Quaestor.Microservices\Quaestor.Microservices.csproj", "{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.LoadBalancing", "src\Quaestor.LoadBalancing\Quaestor.LoadBalancing.csproj", "{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.MiniCluster", "src\Quaestor.MiniCluster\Quaestor.MiniCluster.csproj", "{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Microservices.Tests", "tests\Quaestor.Microservices.Tests\Quaestor.Microservices.Tests.csproj", "{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.LoadBalancing.Tests", "tests\Quaestor.LoadBalancing.Tests\Quaestor.LoadBalancing.Tests.csproj", "{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.LoadReporting", "src\Quaestor.LoadReporting\Quaestor.LoadReporting.csproj", "{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.LoadReporting", "src\Quaestor.LoadReporting\Quaestor.LoadReporting.csproj", "{0B35596F-E2BE-4F96-8588-D101A7C6EDC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.LoadReporting.Tests", "tests\Quaestor.LoadReporting.Tests\Quaestor.LoadReporting.Tests.csproj", "{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.LoadReporting.Tests", "tests\Quaestor.LoadReporting.Tests\Quaestor.LoadReporting.Tests.csproj", "{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,10 +71,6 @@ Global
 		{27CD6061-BCB1-4803-9397-00E48D042B48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27CD6061-BCB1-4803-9397-00E48D042B48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27CD6061-BCB1-4803-9397-00E48D042B48}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -111,7 +105,6 @@ Global
 		{52F8B9B9-D2C2-4F39-9AA2-5A294A2E8202} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{EBEAFE62-DC9A-43DB-B4AC-95743288457C} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 		{27CD6061-BCB1-4803-9397-00E48D042B48} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
-		{3FF43A35-3FE0-4FE8-919C-3E34AA70F07D} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{C30BEE95-DDA1-4130-BBBE-7C9EC1249197} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{FD5FC1F0-7D82-4AA8-8A41-5F591C5271A6} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{45AD1A47-8608-4C65-BBE6-BCB77CCBFF26} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}

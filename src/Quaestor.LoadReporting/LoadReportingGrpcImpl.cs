@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
 using JetBrains.Annotations;
-using Quaestor.Microservices.Definitions;
 
 namespace Quaestor.LoadReporting
 {

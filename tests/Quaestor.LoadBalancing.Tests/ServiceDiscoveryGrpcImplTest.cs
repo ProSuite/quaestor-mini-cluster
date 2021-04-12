@@ -1,9 +1,8 @@
 using Grpc.Core;
 using NUnit.Framework;
 using Quaestor.KeyValueStore;
-using Quaestor.Microservices.Definitions;
 
-namespace Quaestor.Microservices.Tests
+namespace Quaestor.LoadBalancing.Tests
 {
 	[TestFixture]
 	public class ServiceDiscoveryGrpcImplTest

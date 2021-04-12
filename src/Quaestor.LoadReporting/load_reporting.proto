@@ -6,7 +6,7 @@ syntax = "proto3";
  *
  */
 
-package Quaestor.Microservices.Definitions;
+package Quaestor.LoadReporting;
 
 /**
   * The load report service.

@@ -3,10 +3,8 @@ using System.Diagnostics;
 using System.Threading;
 using Grpc.Core;
 using NUnit.Framework;
-using Quaestor.LoadReporting;
-using Quaestor.Microservices.Definitions;
 
-namespace Quaestor.Microservices.Tests
+namespace Quaestor.LoadReporting.Tests
 {
 	[TestFixture]
 	public class LoadReportingGrpcImplTest

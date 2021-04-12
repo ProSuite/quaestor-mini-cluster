@@ -16,17 +16,26 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.14" />
+    <PackageReference Include="Grpc" Version="2.34.0" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.34.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.34.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
     <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
-    <ProjectReference Include="..\Quaestor.Microservices.Definitions\Quaestor.Microservices.Definitions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="service_discovery.proto" />
   </ItemGroup>
 
 </Project>
