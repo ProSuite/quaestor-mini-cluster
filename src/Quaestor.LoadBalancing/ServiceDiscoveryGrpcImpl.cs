@@ -1,16 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
+using Grpc.Health.V1;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.KeyValueStore;
+using Quaestor.LoadReporting;
+using Quaestor.ServiceDiscovery;
+using Quaestor.Utilities;
 
 namespace Quaestor.LoadBalancing
 {
 	public class ServiceDiscoveryGrpcImpl : ServiceDiscoveryGrpc.ServiceDiscoveryGrpcBase
 	{
 		private readonly ServiceRegistry _serviceRegistry;
+		[CanBeNull] private readonly ChannelCredentials _clientChannelCredentials;
+
+		private readonly IDictionary<ServiceLocation, Channel> _channels =
+			new Dictionary<ServiceLocation, Channel>();
 
 		private static readonly Random _random = new Random();
 
@@ -19,9 +29,13 @@ namespace Quaestor.LoadBalancing
 		private readonly ILogger<ServiceDiscoveryGrpcImpl> _logger =
 			Log.CreateLogger<ServiceDiscoveryGrpcImpl>();
 
-		public ServiceDiscoveryGrpcImpl(ServiceRegistry serviceRegistry)
+		public ServiceDiscoveryGrpcImpl(
+			[NotNull] ServiceRegistry serviceRegistry,
+			[CanBeNull] ChannelCredentials clientChannelCredentials)
 		{
 			_serviceRegistry = serviceRegistry;
+
+			_clientChannelCredentials = clientChannelCredentials;
 		}
 
 		public override Task<LocateServicesResponse> LocateServices(
@@ -35,7 +49,10 @@ namespace Quaestor.LoadBalancing
 			{
 				response = new LocateServicesResponse();
 
-				response.ServiceLocations.AddRange(GetServiceLocationMessages(request));
+				IList<ServiceLocationMsg> serviceLocationMessages =
+					LocateRandom(request);
+
+				response.ServiceLocations.AddRange(serviceLocationMessages);
 			}
 			catch (Exception e)
 			{
@@ -47,19 +64,121 @@ namespace Quaestor.LoadBalancing
 			return Task.FromResult(response);
 		}
 
+		public override async Task<LocateServicesResponse> LocateTopServices(
+			LocateServicesRequest request, ServerCallContext context)
+		{
+			_lastRequestFailed = false;
+
+			LocateServicesResponse response = null;
+
+			try
+			{
+				response = new LocateServicesResponse();
+
+				var result = await GetTopServiceLocationMessages(request);
+
+				response.ServiceLocations.AddRange(result);
+			}
+			catch (Exception e)
+			{
+				_lastRequestFailed = true;
+
+				_logger.LogError(e, "Error discovering service {serviceName}", request.ServiceName);
+			}
+
+			return response;
+		}
+
 		public bool IsHealthy()
 		{
 			return !_lastRequestFailed;
 		}
 
-		private IEnumerable<ServiceLocationMsg> GetServiceLocationMessages(
-			LocateServicesRequest request)
+		private IList<ServiceLocationMsg> LocateRandom(
+			[NotNull] LocateServicesRequest request)
 		{
-			var result = new List<ServiceLocationMsg>();
+			IList<ServiceLocation> allServices =
+				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
 
-			foreach (ServiceLocation serviceLocation in
-				_serviceRegistry.GetServiceLocations(request.ServiceName))
+			// Shuffle first!
+			Shuffle(allServices);
+
+			IList<ServiceLocationMsg> result = ToServiceLocationMessages(
+				GetHealthyServiceLocations(allServices, request.MaxCount)).ToList();
+
+			return result;
+		}
+
+		private IEnumerable<ServiceLocation> GetHealthyServiceLocations(
+			[NotNull] IList<ServiceLocation> allServices,
+			int maxCount = -1)
+		{
+			int yieldCount = 0;
+
+			foreach (var serviceLocation in allServices)
 			{
+				if (maxCount > 0 && yieldCount >= maxCount)
+				{
+					yield break;
+				}
+
+				if (IsServiceHealthy(serviceLocation))
+				{
+					yield return serviceLocation;
+					yieldCount++;
+				}
+			}
+		}
+
+		private bool IsServiceHealthy(ServiceLocation serviceLocation)
+		{
+			// TODO: Aggressive time-out!
+
+			Health.HealthClient healthClient =
+				new Health.HealthClient(GetChannel(serviceLocation));
+
+			HealthCheckResponse healthCheckResponse = healthClient.Check(new HealthCheckRequest()
+				{Service = serviceLocation.ServiceName});
+
+			if (healthCheckResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private ChannelBase GetChannel(ServiceLocation serviceLocation)
+		{
+			if (_clientChannelCredentials == null)
+			{
+				return null;
+			}
+
+			if (!_channels.TryGetValue(serviceLocation, out Channel channel))
+			{
+				channel = GrpcUtils.CreateChannel(serviceLocation.HostName, serviceLocation.Port,
+					_clientChannelCredentials);
+
+				_channels.Add(serviceLocation, channel);
+			}
+
+			return channel;
+		}
+
+		private static IEnumerable<ServiceLocationMsg> ToServiceLocationMessages(
+			IEnumerable<ServiceLocation> serviceLocations,
+			int maxCount = -1)
+		{
+			int resultCount = 0;
+
+			foreach (ServiceLocation serviceLocation in serviceLocations)
+			{
+				if (maxCount > 0 && resultCount++ >= maxCount)
+				{
+					yield break;
+				}
+
 				ServiceLocationMsg serviceLocationMsg = new ServiceLocationMsg
 				{
 					Scope = serviceLocation.Scope,
@@ -68,12 +187,121 @@ namespace Quaestor.LoadBalancing
 					Port = serviceLocation.Port
 				};
 
-				result.Add(serviceLocationMsg);
+				yield return serviceLocationMsg;
+			}
+		}
+
+		private async Task<IList<ServiceLocationMsg>> GetTopServiceLocationMessages(
+			[NotNull] LocateServicesRequest request)
+		{
+			var allServices =
+				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
+
+			// Shuffle first because typically many will have rank 0 -> try not to return the same one for concurrent requests
+			Shuffle(allServices);
+
+			if (_clientChannelCredentials == null)
+			{
+				// Revert to random (use first n of shuffled services)
+				return ToServiceLocationMessages(allServices, request.MaxCount).ToList();
 			}
 
-			Shuffle(result);
+			var servicesByDesirability =
+				await GetServicesRankedByLoad(allServices, request.MaxCount);
+
+			int maxResultCount = request.MaxCount == 0 ? -1 : request.MaxCount;
+
+			IList<ServiceLocationMsg> result =
+				ToServiceLocationMessages(servicesByDesirability, maxResultCount).ToList();
 
 			return result;
+		}
+
+		private async Task<IList<ServiceLocation>> GetServicesRankedByLoad(
+			[NotNull] IEnumerable<ServiceLocation> serviceLocations,
+			int maxCount)
+		{
+			if (maxCount <= 0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(maxCount));
+			}
+
+			Dictionary<ServiceLocation, double> servicesByDesirability =
+				new Dictionary<ServiceLocation, double>();
+
+			var freeList = new List<ServiceLocation>();
+
+			foreach (var serviceLocation in serviceLocations)
+			{
+				if (freeList.Count >= maxCount)
+				{
+					// Do not differentiate between free services - it's not worth the effort (or is it?)
+					return freeList;
+				}
+
+				if (!IsServiceHealthy(serviceLocation))
+				{
+					continue;
+				}
+
+				double desirability = await GetServiceRank(serviceLocation);
+
+				if (desirability < 0)
+				{
+					continue;
+				}
+
+				if (desirability == 0)
+				{
+					freeList.Add(serviceLocation);
+				}
+
+				servicesByDesirability.Add(serviceLocation, desirability);
+			}
+
+			return servicesByDesirability.Keys.OrderBy(sl => servicesByDesirability[sl]).ToList();
+		}
+
+		/// <summary>
+		///     Returns a ranking number for the specified service location. Lower is
+		///     better as long as the rank is positive.
+		///     Locations that report 0 request capacity, -1 is returned.
+		///     For locations reporting 0 current requests, 0 is returned. These services
+		///     are all considered equally good. Requests with at least one ongoing request
+		///     are weighted by the CPU load of the service process.
+		/// </summary>
+		/// <param name="serviceLocation"></param>
+		/// <returns></returns>
+		private async Task<double> GetServiceRank(
+			[NotNull] ServiceLocation serviceLocation)
+		{
+			var loadRequest = new LoadReportRequest
+			{
+				Scope = serviceLocation.Scope,
+				ServiceName = serviceLocation.ServiceName
+			};
+
+			LoadReportingGrpc.LoadReportingGrpcClient loadClient =
+				new LoadReportingGrpc.LoadReportingGrpcClient(GetChannel(serviceLocation));
+
+			LoadReportResponse loadReportResponse =
+				await loadClient.ReportLoadAsync(loadRequest);
+
+			int capacity = loadReportResponse.ServerStats.RequestCapacity;
+
+			if (capacity == 0)
+			{
+				return -1;
+			}
+
+			double workload = (double) loadReportResponse.ServerStats.CurrentRequests /
+			                  capacity;
+
+			double cpuUsage = loadReportResponse.ServerStats.CpuUsage;
+
+			var desirability = cpuUsage > 0 ? workload * cpuUsage : workload;
+
+			return desirability;
 		}
 
 		private static void Shuffle<T>(IList<T> list)

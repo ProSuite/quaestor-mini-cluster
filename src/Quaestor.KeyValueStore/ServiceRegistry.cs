@@ -53,19 +53,16 @@ namespace Quaestor.KeyValueStore
 		{
 			string[] components = key.Split('/');
 
-			ServiceLocation serviceLocation = new ServiceLocation();
-
-			serviceLocation.Scope = _globalPrefix;
-			serviceLocation.ServiceName = components[2];
-			serviceLocation.HostName = components[3];
-
+			string serviceName = components[2];
+			string hostName = components[3];
 			var portStr = components[4];
 			if (!int.TryParse(portStr, out var port))
 			{
 				throw new InvalidOperationException($"Cannot parse {portStr} to int");
 			}
 
-			serviceLocation.Port = port;
+			ServiceLocation serviceLocation = new ServiceLocation(
+				serviceName, hostName, port, _globalPrefix);
 
 			return serviceLocation;
 		}

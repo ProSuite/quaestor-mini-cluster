@@ -6,7 +6,7 @@ syntax = "proto3";
  *
  */
 
-package Quaestor.LoadBalancing;
+package Quaestor.ServiceDiscovery;
 
 /**
   * A service discovery and one-arm load balancing service.

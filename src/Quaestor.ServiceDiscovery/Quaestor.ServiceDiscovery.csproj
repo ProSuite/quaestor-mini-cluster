@@ -1,36 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>0.0.1</Version>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>The ProSuite Authors</Authors>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Quaestor.MiniCluster.Key.snk</AssemblyOriginatorKeyFile>
-    <Description>The quaestor microservices for load reporting, service discovery and load balancing.</Description>
+    <Description>The quaestor service discovery API.</Description>
     <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Company />
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.14" />
+    <PackageReference Include="Google.Protobuf" Version="3.13" />
     <PackageReference Include="Grpc" Version="2.34.0" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.34.0" />
     <PackageReference Include="Grpc.Tools" Version="2.34.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
-    <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
-    <ProjectReference Include="..\Quaestor.LoadReporting\Quaestor.LoadReporting.csproj" />
-    <ProjectReference Include="..\Quaestor.ServiceDiscovery\Quaestor.ServiceDiscovery.csproj" />
-    <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />
+    <Protobuf Include="service_discovery.proto" />
   </ItemGroup>
 
   <ItemGroup>
