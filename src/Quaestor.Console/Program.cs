@@ -161,6 +161,12 @@ namespace Quaestor.Console
 				}
 
 				builder.AddConsole();
+
+				// Surely there must be a better way... or use log4net console configuration
+				builder.AddFilter(
+					(provider, _, logLevel) =>
+						!provider.Contains("ConsoleLoggerProvider")
+						|| logLevel >= LogLevel.Information);
 			});
 
 			Log.SetLoggerFactory(loggerFactory);
