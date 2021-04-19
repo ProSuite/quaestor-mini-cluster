@@ -1,0 +1,63 @@
+# Configuration file for quaestor console application
+# This file will be searched in the directory provided by the --configDir command line option
+# If not provided it is searched in the current directory.
+#
+# Configuration of the service discovery / load balancer service
+# This section is relevant if quaestor is started with the load-balancer option
+serverConfig:
+  hostName: localhost
+  port: 5150
+  certificate:
+  privateKeyFile:
+  enforceMutualTls: false
+#
+# Configuration of the cluster management
+# # This section is relevant if quaestor is started with the cluster option
+clusterConfig:
+  name: example
+  # The heart beat interval in seconds.
+  heartBeatIntervalSeconds: 30
+  # The time-out for the health check performed on each agent during the heart beat
+  memberResponseTimeOutSeconds: 5
+  # The time-out for an agent shut-down in case it is not healthy (NOT IMPLEMENTED for local process)
+  memberMaxShutdownTimeSeconds: 60
+  # The number of times an agent re-start is attempted in case it is unhealthy or not running 
+  memberMaxStartupRetries: 25
+# List of agents that are managed by the cluster. Currently only local processes are supported.
+agents:
+  Worker:
+    executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
+    commandLineArguments: "{Port} 75"
+    hostName: 127.0.0.1
+    useTLS: false
+    processCount: 4
+    ports: [ 5161, 5162, 5163, 5164 ]
+    serviceNames:
+    - Worker
+  LoadBalancer:
+    executablePath: quaestor.exe
+    commandLineArguments: "load-balancer"
+    environmentVariables:
+      QUAESTOR_LOGFILE_SUFFIX example_LB
+      TEMP C:\Temp
+    hostName: localhost
+    useTLS: false
+    processCount: 1
+    ports:
+    - 5150
+    serviceNames:
+    - ServiceDiscoveryGrpc
+  # Example for a distributed keyvalue store to be used by the service discovery:
+  KeyValueStore:
+    # Executable: etcd.exe (make sure it is in the path)
+    executablePath: etcd.exe
+    # It works without arguments but TLS is recommended. Example with auto-generated pem files: 
+    # --name cluster_test --data-dir C:\bin\etcd\data\topgis_qa.etcd --auto-tls --advertise-client-urls=https://127.0.0.1:2379 --listen-client-urls=https://127.0.0.1:2379
+    commandLineArguments:
+    hostName: 127.0.0.1
+    useTLS: false
+    processCount: 1
+    # The official etcd default port for client requests is 2379
+    ports:
+    - 2379
+    serviceNames: []

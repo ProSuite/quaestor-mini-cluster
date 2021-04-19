@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using Grpc.Core;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 
@@ -28,6 +31,50 @@ namespace Quaestor.Utilities
 			};
 
 			return channelOptions;
+		}
+
+		public static ChannelCredentials CreateChannelCredentials(
+			bool useTls,
+			[CanBeNull] string clientCertificate = null)
+		{
+			if (!useTls)
+			{
+				_logger.LogDebug("Using insecure channel credentials");
+
+				return ChannelCredentials.Insecure;
+			}
+
+			string rootCertificatesAsPem =
+				CertificateUtils.GetUserRootCertificatesInPemFormat();
+
+			KeyCertificatePair sslClientCertificate = null;
+			if (!string.IsNullOrEmpty(clientCertificate))
+			{
+				KeyPair keyPair = CertificateUtils.FindKeyCertificatePairFromStore(
+					clientCertificate, new[]
+					{
+						X509FindType.FindBySubjectDistinguishedName,
+						X509FindType.FindByThumbprint,
+						X509FindType.FindBySubjectName
+					}, StoreName.My, StoreLocation.CurrentUser);
+
+				if (keyPair != null)
+				{
+					_logger.LogDebug("Using client-side certificate");
+
+					sslClientCertificate =
+						new KeyCertificatePair(keyPair.PublicKey, keyPair.PrivateKey);
+				}
+				else
+				{
+					throw new ArgumentException(
+						$"Could not usable find client certificate {clientCertificate} in certificate store.");
+				}
+			}
+
+			var result = new SslCredentials(rootCertificatesAsPem, sslClientCertificate);
+
+			return result;
 		}
 
 		public static Channel CreateChannel(

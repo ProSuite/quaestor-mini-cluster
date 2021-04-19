@@ -4,6 +4,7 @@ using Grpc.Core;
 using Grpc.Health.V1;
 using Grpc.HealthCheck;
 using JetBrains.Annotations;
+using Quaestor.LoadReporting;
 
 namespace WorkerProcess
 {
@@ -14,8 +15,6 @@ namespace WorkerProcess
 
 		static async Task Main(string[] args)
 		{
-			int port;
-
 			if (args.Length < 1)
 			{
 				Console.WriteLine("Too few arguments.");
@@ -23,7 +22,7 @@ namespace WorkerProcess
 				return;
 			}
 
-			if (!int.TryParse(args[0], out port))
+			if (!int.TryParse(args[0], out var port))
 			{
 				Console.WriteLine($"Invalid port: {port}.");
 				PrintUsage();
@@ -43,15 +42,23 @@ namespace WorkerProcess
 			}
 
 			var healthService = new HealthServiceImpl();
-
 			healthService.SetStatus(_serviceName, HealthCheckResponse.Types.ServingStatus.Serving);
+
+			LoadReportingGrpcImpl loadReporter = new LoadReportingGrpcImpl();
+			loadReporter.AllowMonitoring("Worker", new ServiceLoad
+			{
+				ProcessCapacity = 1,
+				CurrentProcessCount = 0,
+				CpuUsage = 0.12345
+			});
 
 			var server =
 				new Server
 				{
 					Services =
 					{
-						Health.BindService(healthService)
+						Health.BindService(healthService),
+						LoadReportingGrpc.BindService(loadReporter)
 					},
 					Ports =
 					{
@@ -63,18 +70,23 @@ namespace WorkerProcess
 
 			if (seconds > 0)
 			{
-				Console.WriteLine($"Running service in healthy mode for {seconds}s...");
-
-				await Task.Delay(TimeSpan.FromSeconds(seconds));
-
-				Console.WriteLine("Setting service to NOT_SERVING.");
-
-				healthService.SetStatus(_serviceName, HealthCheckResponse.Types.ServingStatus.NotServing);
+				await SetUnhealthyAfter(seconds, healthService);
 			}
 
 			Console.WriteLine("Press any key to finish.");
+			Console.ReadKey(true);
+		}
 
-			Console.ReadKey();
+		private static async Task SetUnhealthyAfter(int seconds, HealthServiceImpl healthService)
+		{
+			Console.WriteLine($"Running service in healthy mode for {seconds}s...");
+
+			await Task.Delay(TimeSpan.FromSeconds(seconds));
+
+			Console.WriteLine("Setting service to NOT_SERVING.");
+
+			healthService.SetStatus(_serviceName,
+				HealthCheckResponse.Types.ServingStatus.NotServing);
 		}
 
 		private static void PrintUsage()

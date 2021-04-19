@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.Utilities;
@@ -16,13 +17,13 @@ namespace Quaestor.MiniCluster
 
 		private readonly Cluster _cluster;
 		private readonly ILogger _logger = Log.CreateLogger<ClusterHeartBeat>();
-		private readonly Func<IManagedProcess, Task<bool>> _unavailableProcedure;
 
-		private readonly Func<IManagedProcess, Task<bool>> _unhealthyProcedure;
+		[NotNull] private readonly Func<IManagedProcess, Task<bool>> _unavailableProcedure;
+		[NotNull] private readonly Func<IManagedProcess, Task<bool>> _unhealthyProcedure;
 
-		public ClusterHeartBeat(Cluster cluster,
-		                        Func<IManagedProcess, Task<bool>> unhealthyProcedure,
-		                        Func<IManagedProcess, Task<bool>> unavailableProcedure)
+		public ClusterHeartBeat([NotNull] Cluster cluster,
+		                        [NotNull] Func<IManagedProcess, Task<bool>> unhealthyProcedure,
+		                        [NotNull] Func<IManagedProcess, Task<bool>> unavailableProcedure)
 		{
 			_cluster = cluster;
 			_unhealthyProcedure = unhealthyProcedure;
@@ -52,6 +53,9 @@ namespace Quaestor.MiniCluster
 			{
 				try
 				{
+					_logger.LogInformation("-------------Heartbeat [{time}]------------------",
+						DateTime.Now);
+
 					var members = _cluster.Members;
 
 					foreach (var member in members)
@@ -64,68 +68,80 @@ namespace Quaestor.MiniCluster
 							continue;
 						}
 
-						await CheckHeartBeatAsync(member);
+						if (await CheckHeartBeatAsync(member))
+						{
+							if (member is IServerProcess serverProcess)
+							{
+								// Just to be save - in case they have been started previously.
+								_cluster.ServiceRegistrar?.Ensure(serverProcess);
+							}
+						}
 					}
 
 					await Task.Delay(_cluster.HeartBeatInterval);
 				}
-				catch (Exception x)
+				catch (Exception exception)
 				{
-					_logger.LogError(x, "Heartbeat loop failed");
+					_logger.LogError(exception, "Heartbeat loop failed");
 				}
 			}
 		}
 
-		private async Task CheckHeartBeatAsync(IManagedProcess member)
+		public async Task<bool> CheckHeartBeatAsync(IManagedProcess member)
 		{
 			var timeout = _cluster.MemberResponseTimeOut;
 
 			try
 			{
-				if (!member.IsRunning)
-				{
-					_logger.LogWarning(
-						"Cluster member not running ({member}).", member);
-					_unavailableProcedure?.Invoke(member);
-					return;
-				}
-
 				Stopwatch watch = Stopwatch.StartNew();
 
+				// Check for health first, it might be that the process is running but we have not
+				// started it.
 				var healthy = await TaskUtils.TimeoutAfter(member.IsServingAsync(), timeout);
 
-				if (!healthy)
-				{
-					_logger.LogWarning(
-						"Heartbeat detected for {member} but some services are un-healthy [{milliseconds}ms].",
-						member, watch.ElapsedMilliseconds);
-
-					_unhealthyProcedure?.Invoke(member);
-				}
-				else
+				if (healthy)
 				{
 					_logger.LogInformation(
 						"Heartbeat detected for {member}. All services are healthy [{milliseconds}ms].",
 						member, watch.ElapsedMilliseconds);
+
+					return true;
 				}
+
+				if (member.IsKnownRunning)
+				{
+					_logger.LogWarning(
+						"Process is running for {member} but some services are un-healthy [{milliseconds}ms].",
+						member, watch.ElapsedMilliseconds);
+
+					return await _unhealthyProcedure.Invoke(member);
+				}
+
+				_logger.LogWarning("Cluster member not running ({member}) [{milliseconds}ms].",
+					member, watch.ElapsedMilliseconds);
+
+				return await _unavailableProcedure.Invoke(member);
 			}
 			catch (TimeoutException)
 			{
 				_logger.LogWarning("Heartbeat timed out for {member}.", member);
 
-				_unavailableProcedure?.Invoke(member);
+				return await _unavailableProcedure.Invoke(member);
 			}
 			catch (RpcException rpcException)
 			{
 				_logger.LogWarning(rpcException,
 					"RPC error in heartbeat detection for {member}: {exceptionMessage}",
 					member, rpcException.Message);
-				_unavailableProcedure?.Invoke(member);
+
+				return await _unavailableProcedure.Invoke(member);
 			}
 			catch (Exception e)
 			{
 				_logger.LogError(e, "Error in heartbeat detection for {member}: {exceptionMessage}",
 					member, e.Message);
+
+				return false;
 			}
 		}
 	}

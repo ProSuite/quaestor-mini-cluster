@@ -11,10 +11,85 @@ namespace Quaestor.KeyValueStore
 {
 	public class EtcdKeyValueStore : IKeyValueStore
 	{
-		private readonly ILogger<EtcdKeyValueStore> _logger = Log.CreateLogger<EtcdKeyValueStore>();
+		private static readonly ILogger<EtcdKeyValueStore> _logger =
+			Log.CreateLogger<EtcdKeyValueStore>();
 
 		private readonly EtcdClient _etcdClient;
 		[CanBeNull] private readonly TimeSpan? _timeOut;
+
+		/// <summary>
+		///     Attempts a connection with the Etcd grpc service at the specified
+		///     address and returns the respective client endpoint as EtcdKeyValueStore.
+		/// </summary>
+		/// <param name="connectionString">
+		///     The connection string in the form
+		///     http://localhost:2379 or https://hostname.example.com:8080
+		/// </param>
+		/// <returns></returns>
+		[ItemCanBeNull]
+		public static async Task<EtcdKeyValueStore> TryConnectAsync(
+			string connectionString = "http://localhost:2379")
+		{
+			_logger.LogDebug("Trying to connect to distributed key-value store at {conn}...",
+				connectionString);
+
+			EtcdClient etcdClient = new EtcdClient(connectionString);
+
+			var etcdStore = new EtcdKeyValueStore(etcdClient);
+
+			// Warm up:
+			bool connected = await etcdStore.ConnectAsync();
+
+			return connected ? etcdStore : null;
+		}
+
+		/// <summary>
+		///     Attempts a connection with the Etcd grpc service at the specified
+		///     address and returns the respective client endpoint as EtcdKeyValueStore.
+		/// </summary>
+		/// <param name="hostName"></param>
+		/// <param name="port"></param>
+		/// <param name="useTLS"></param>
+		/// <returns></returns>
+		[ItemCanBeNull]
+		public static async Task<EtcdKeyValueStore> TryConnectAsync(
+			string hostName, int port, bool useTLS)
+		{
+			string protocol = useTLS ? "https" : "http";
+
+			string etcdConnection = $"{protocol}://{hostName}:{port}";
+
+			var keyValueStore = await TryConnectAsync(etcdConnection);
+
+			return keyValueStore;
+		}
+
+		/// <summary>
+		///     Attempts a connection with the Etcd grpc service addresses as defined in
+		///     the provided agent configuration. The first successful connection is returned
+		///     as EtcdKeyValueStore.
+		/// </summary>
+		/// <param name="agentConfiguration"></param>
+		/// <returns></returns>
+		[ItemCanBeNull]
+		public static async Task<EtcdKeyValueStore> TryConnectAsync(
+			AgentConfiguration agentConfiguration)
+		{
+			List<int> ports = agentConfiguration.Ports ?? new List<int>(0);
+
+			foreach (int port in ports)
+			{
+				EtcdKeyValueStore keyValueStore = await TryConnectAsync(
+					agentConfiguration.HostName, port, agentConfiguration.UseTls);
+
+				if (keyValueStore != null)
+				{
+					return keyValueStore;
+				}
+			}
+
+			return null;
+		}
 
 		public EtcdKeyValueStore([NotNull] EtcdClient etcdClient,
 		                         [CanBeNull] TimeSpan? timeOut = null)

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
+using Quaestor.KeyValueStore;
 using Quaestor.Utilities;
 
 namespace Quaestor.MiniCluster
@@ -16,7 +17,7 @@ namespace Quaestor.MiniCluster
 
 		private readonly List<IManagedProcess> _managedProcesses = new List<IManagedProcess>();
 
-		private ClusterHeartBeat _heartbeat;
+		private readonly ClusterHeartBeat _heartbeat;
 
 		public Cluster(string name = "<no name>")
 		{
@@ -25,6 +26,8 @@ namespace Quaestor.MiniCluster
 			_logger = Log.CreateLogger($"Cluster {Name}");
 
 			_clusterConfig = new ClusterConfig();
+
+			_heartbeat = new ClusterHeartBeat(this, CareForUnhealthy, CareForUnavailable);
 		}
 
 		public Cluster(ClusterConfig clusterConfig) : this(clusterConfig.Name)
@@ -59,14 +62,54 @@ namespace Quaestor.MiniCluster
 			_managedProcesses.AddRange(managedProcesses);
 		}
 
-		public void Start()
+		public async Task<bool> StartAsync()
 		{
 			_logger.LogInformation("Starting cluster...");
 
 			CheckRunningProcesses();
 
-			_heartbeat = new ClusterHeartBeat(this, CareForUnhealthy, CareForUnavailable);
-			_heartbeat.StartAsync();
+			// Ensure KVS is running, if configured!
+			IKeyValueStore keyValueStore = await InitializeKeyValueStoreAsync(Members, _heartbeat);
+
+			ServiceRegistrar = new ServiceRegistrar(new ServiceRegistry(keyValueStore));
+
+			await _heartbeat.StartAsync();
+
+			return true;
+		}
+
+		private static async Task<IKeyValueStore> InitializeKeyValueStoreAsync(
+			[NotNull] IEnumerable<IManagedProcess> managedProcesses,
+			[NotNull] ClusterHeartBeat heartbeat)
+		{
+			string etcdAgentType = WellKnownAgentType.KeyValueStore.ToString();
+
+			IEnumerable<IManagedProcess> kvsProcesses =
+				managedProcesses.Where(m => m.AgentType.Equals(etcdAgentType));
+
+			// For all well-known KVS agent processes...
+			foreach (var kvsProcess in kvsProcesses)
+			{
+				// Check if they live (reviving them, if necessary):
+				bool started = await heartbeat.CheckHeartBeatAsync(kvsProcess);
+
+				if (started)
+				{
+					// ... and try making contact
+					IServerProcess serverProcess = (IServerProcess) kvsProcess;
+
+					var keyValueStore = await EtcdKeyValueStore.TryConnectAsync(
+						serverProcess.HostName, serverProcess.Port, serverProcess.UseTls);
+
+					if (keyValueStore != null)
+					{
+						return keyValueStore;
+					}
+				}
+			}
+
+			// None is configured or none is running or none is responding:
+			return new LocalKeyValueStore();
 		}
 
 		public async Task<bool> ShutdownAsync(TimeSpan timeout)
@@ -76,7 +119,9 @@ namespace Quaestor.MiniCluster
 			var shutDownResults = await Task.WhenAll(Members.Select(m =>
 			{
 				if (m is IServerProcess serverProcess)
+				{
 					ServiceRegistrar?.EnsureRemoved(serverProcess);
+				}
 
 				return m.TryShutdownAsync(timeout);
 			}));
@@ -106,7 +151,7 @@ namespace Quaestor.MiniCluster
 			_logger.LogInformation("(Re-)starting process with status 'not serving': {process}",
 				process);
 
-			if (process.IsRunning)
+			if (process.IsKnownRunning)
 			{
 				process.MonitoringSuspended = true;
 				try
@@ -137,13 +182,11 @@ namespace Quaestor.MiniCluster
 			{
 				_logger.LogWarning("Startup retries have been exceeded. Not starting {process}",
 					process);
-			}
-			else
-			{
-				return await TryStart(process);
+
+				return false;
 			}
 
-			return true;
+			return await TryStart(process);
 		}
 
 		private async Task<bool> TryStart([NotNull] IManagedProcess process)
@@ -156,7 +199,7 @@ namespace Quaestor.MiniCluster
 			}
 			else if (process is IServerProcess serverProcess)
 			{
-				ServiceRegistrar?.Add(serverProcess);
+				ServiceRegistrar?.Ensure(serverProcess);
 			}
 
 			return success;
@@ -198,6 +241,13 @@ namespace Quaestor.MiniCluster
 						processesCount, processName);
 				}
 			}
+		}
+
+		public void ClearMembers()
+		{
+			// TODO: Graceful Shutdown
+
+			_managedProcesses.Clear();
 		}
 	}
 }

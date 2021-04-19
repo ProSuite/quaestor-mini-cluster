@@ -13,7 +13,8 @@ using Quaestor.Utilities;
 namespace Quaestor.MiniCluster
 {
 	/// <summary>
-	///     Process that can be started directly on the local machine.
+	///     Process that can be started directly on the local machine and that can be
+	///     reached with the specified connection details in order to check its health.
 	/// </summary>
 	public class LocalProcess : IManagedProcess, IServerProcess
 	{
@@ -25,6 +26,15 @@ namespace Quaestor.MiniCluster
 
 		private Health.HealthClient _healthClient;
 
+		/// <summary>
+		///     Initializes a new instance of the <see cref="LocalProcess" /> class.
+		/// </summary>
+		/// <param name="hostName">The process' service host name</param>
+		/// <param name="port">The process' service port number</param>
+		/// <param name="credentials">
+		///     Client credentials to connect to the
+		///     process' service.
+		/// </param>
 		public LocalProcess(string hostName = _localhost,
 		                    int port = -1,
 		                    ChannelCredentials credentials = null)
@@ -39,17 +49,19 @@ namespace Quaestor.MiniCluster
 
 		public string ExecutablePath { get; set; }
 
+		public string CommandLineArguments { get; set; }
+
 		public string HostName { get; }
 
 		public int Port { get; private set; }
 
-		public string CommandLineArguments { get; set; }
+		public bool UseTls => _credentials != ChannelCredentials.Insecure;
+
+		public IList<string> ServiceNames { get; } = new List<string>();
 
 		public Process Process { get; set; }
 
 		public Channel Channel { get; private set; }
-
-		public IList<string> ServiceNames { get; } = new List<string>();
 
 		/// <summary>
 		///     If true, an unhealthy process is killed right away to expedite the restart process.
@@ -69,7 +81,7 @@ namespace Quaestor.MiniCluster
 
 		public int StartupFailureCount { get; set; }
 
-		public bool IsRunning => !Process?.HasExited ?? false;
+		public bool IsKnownRunning => !Process?.HasExited ?? false;
 
 		public async Task<bool> IsServingAsync()
 		{
@@ -192,6 +204,53 @@ namespace Quaestor.MiniCluster
 				$"Agent type {AgentType}, process name {ProcessName}, PID: {processIdentifier}, Host: {HostName}, Port: {Port}";
 		}
 
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+				return false;
+			if (ReferenceEquals(this, obj))
+				return true;
+			if (obj.GetType() != GetType())
+				return false;
+			return Equals((LocalProcess) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = (AgentType != null
+					? StringComparer.InvariantCultureIgnoreCase.GetHashCode(AgentType)
+					: 0);
+				hashCode = (hashCode * 397) ^ (ExecutablePath != null
+					? StringComparer.InvariantCultureIgnoreCase.GetHashCode(ExecutablePath)
+					: 0);
+				hashCode = (hashCode * 397) ^ (CommandLineArguments != null
+					? StringComparer.InvariantCultureIgnoreCase.GetHashCode(CommandLineArguments)
+					: 0);
+				hashCode = (hashCode * 397) ^ (HostName != null
+					? StringComparer.InvariantCultureIgnoreCase.GetHashCode(HostName)
+					: 0);
+				hashCode = (hashCode * 397) ^ Port;
+				hashCode = (hashCode * 397) ^
+				           (ServiceNames != null ? ServiceNames.GetHashCode() : 0);
+				return hashCode;
+			}
+		}
+
+		private bool Equals(LocalProcess other)
+		{
+			return string.Equals(AgentType, other.AgentType,
+				       StringComparison.InvariantCultureIgnoreCase) &&
+			       string.Equals(ExecutablePath, other.ExecutablePath,
+				       StringComparison.InvariantCultureIgnoreCase) &&
+			       string.Equals(CommandLineArguments, other.CommandLineArguments,
+				       StringComparison.InvariantCultureIgnoreCase) &&
+			       string.Equals(HostName, other.HostName,
+				       StringComparison.InvariantCultureIgnoreCase) &&
+			       Port == other.Port && Equals(ServiceNames, other.ServiceNames);
+		}
+
 		private void OpenChannel()
 		{
 			if (string.IsNullOrEmpty(HostName))
@@ -208,7 +267,8 @@ namespace Quaestor.MiniCluster
 		{
 			if (ServiceNames.Count == 0)
 			{
-				_logger.LogInformation("No service names to check, using empty string.");
+				_logger.LogInformation(
+					"{agenttype}: No service names to check, using empty string.", AgentType);
 
 				return await CheckHealth(string.Empty);
 			}

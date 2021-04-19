@@ -15,7 +15,8 @@ namespace HelloWorld
 		{
 			Console.WriteLine("Hello World! Starting cluster...");
 
-			ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+			ILoggerFactory loggerFactory =
+				LoggerFactory.Create(builder => { builder.AddConsole(); });
 
 			Log.SetLoggerFactory(loggerFactory);
 
@@ -25,7 +26,7 @@ namespace HelloWorld
 
 			cluster.Add(localProcess);
 
-			cluster.Start();
+			_ = cluster.StartAsync();
 
 			Console.WriteLine("Press any key to finish");
 
@@ -63,7 +64,8 @@ namespace HelloWorld
 				throw new InvalidOperationException("Cannot get directory of executing assembly.");
 			}
 
-			string exePath = Path.Combine(assemblyDir, @"..\..\..\..", @"WorkerProcess\bin\Debug\net5.0",
+			string exePath = Path.Combine(assemblyDir, @"..\..\..\..",
+				@"WorkerProcess\bin\Debug\net5.0",
 				"WorkerProcess.exe");
 			return exePath;
 		}

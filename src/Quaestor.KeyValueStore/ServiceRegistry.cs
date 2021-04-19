@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace Quaestor.KeyValueStore
@@ -10,23 +11,23 @@ namespace Quaestor.KeyValueStore
 		private readonly string _globalPrefix;
 
 		public ServiceRegistry([NotNull] IKeyValueStore keyValueStore,
-		                       [NotNull] string globalPrefix)
+		                       [NotNull] string globalPrefix = "")
 		{
 			_keyValueStore = keyValueStore;
 			_globalPrefix = globalPrefix;
 		}
 
-		public void Add(IEnumerable<string> serviceNames, string hostName, int port)
+		public void Ensure(IEnumerable<string> serviceNames, string hostName, int port, bool useTls)
 		{
 			foreach (string serviceName in serviceNames)
 			{
-				Add(serviceName, hostName, port);
+				Ensure(serviceName, hostName, port, useTls);
 			}
 		}
 
-		public void Add(string serviceName, string hostName, int port)
+		public void Ensure(string serviceName, string hostName, int port, bool useTls)
 		{
-			string key = CreateKey(serviceName, hostName, port);
+			string key = CreateKey(serviceName, hostName, port, useTls);
 
 			_keyValueStore.Put(key, serviceName);
 		}
@@ -39,14 +40,48 @@ namespace Quaestor.KeyValueStore
 				globalScope = _globalPrefix;
 			}
 
-			string prefix = $"{globalScope}/services/{serviceName}/";
+			IEnumerable<KeyValuePair<string, string>> keyValuePairs =
+				GetServiceEntries(globalScope, serviceName);
 
-			foreach (var kvp in _keyValueStore.GetRange(prefix))
+			foreach (var kvp in keyValuePairs)
 			{
 				ServiceLocation serviceLocation = Parse(kvp.Key);
 
 				yield return serviceLocation;
 			}
+		}
+
+		public int GetTotalEndpointCount(out int distinctServiceCount)
+		{
+			IEnumerable<KeyValuePair<string, string>> keyValuePairs = GetServiceEntries();
+
+			var all = new List<ServiceLocation>();
+
+			foreach (var kvp in keyValuePairs)
+			{
+				ServiceLocation serviceLocation = Parse(kvp.Key);
+
+				all.Add(serviceLocation);
+			}
+
+			distinctServiceCount = all.Select(s => s.ServiceName).Distinct().Count();
+			int endPointCount = all.Select(s => $"{s.HostName}:{s.Port}").Distinct().Count();
+
+			return endPointCount;
+		}
+
+		private IEnumerable<KeyValuePair<string, string>> GetServiceEntries(string scope = null,
+			string serviceName = null)
+		{
+			scope = scope ?? _globalPrefix;
+			string prefix = $"services/{scope}";
+
+			if (serviceName != null)
+			{
+				prefix = $"{prefix}/{serviceName}";
+			}
+
+			return _keyValueStore.GetRange(prefix);
 		}
 
 		private ServiceLocation Parse(string key)
@@ -55,36 +90,43 @@ namespace Quaestor.KeyValueStore
 
 			string serviceName = components[2];
 			string hostName = components[3];
-			var portStr = components[4];
+			string portStr = components[4];
 			if (!int.TryParse(portStr, out var port))
 			{
 				throw new InvalidOperationException($"Cannot parse {portStr} to int");
 			}
 
+			string protocol = components[5];
+
+			bool useTls = protocol == "https";
+
 			ServiceLocation serviceLocation = new ServiceLocation(
-				serviceName, hostName, port, _globalPrefix);
+				serviceName, hostName, port, useTls, _globalPrefix);
 
 			return serviceLocation;
 		}
 
-		public void EnsureRemoved(IEnumerable<string> serviceNames, string hostName, int port)
+		public void EnsureRemoved(IEnumerable<string> serviceNames,
+		                          string hostName, int port, bool useTls)
 		{
 			foreach (string serviceName in serviceNames)
 			{
-				EnsureRemoved(serviceName, hostName, port);
+				EnsureRemoved(serviceName, hostName, port, useTls);
 			}
 		}
 
-		public void EnsureRemoved(string serviceName, string hostName, int port)
+		public void EnsureRemoved(string serviceName, string hostName, int port, bool useTls)
 		{
-			string key = CreateKey(serviceName, hostName, port);
+			string key = CreateKey(serviceName, hostName, port, useTls);
 
 			_keyValueStore.Delete(key);
 		}
 
-		private string CreateKey(string serviceName, string hostName, int port)
+		private string CreateKey(string serviceName, string hostName, int port, bool useTls)
 		{
-			return $"{_globalPrefix}/services/{serviceName}/{hostName}/{port}";
+			string protocol = useTls ? "https" : "http";
+
+			return $"services/{_globalPrefix}/{serviceName}/{hostName}/{port}/{protocol}";
 		}
 	}
 }

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Quaestor.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "cluster"
+    }
+  }
+}

@@ -11,4 +11,8 @@
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Quaestor.LoadReporting\Quaestor.LoadReporting.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -63,7 +63,7 @@ namespace Quaestor.LoadBalancing.Tests
 
 				_serviceLoadByPort.Add(port, serviceLoad);
 
-				_serviceRegistry.Add(_serviceName, _hostName, port);
+				_serviceRegistry.Ensure(_serviceName, _hostName, port, false);
 			}
 		}
 
@@ -203,7 +203,7 @@ namespace Quaestor.LoadBalancing.Tests
 			var serviceRegistry = new ServiceRegistry(new LocalKeyValueStore(), "test");
 
 			var serviceDiscoveryGrpcImpl =
-				new ServiceDiscoveryGrpcImpl(serviceRegistry, ChannelCredentials.Insecure);
+				new ServiceDiscoveryGrpcImpl(serviceRegistry);
 
 			var server =
 				new Server

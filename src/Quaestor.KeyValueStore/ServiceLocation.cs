@@ -7,11 +7,13 @@ namespace Quaestor.KeyValueStore
 		public ServiceLocation([NotNull] string serviceName,
 		                       [NotNull] string hostName,
 		                       int port,
+		                       bool useTls,
 		                       [CanBeNull] string scope = null)
 		{
 			ServiceName = serviceName;
 			HostName = hostName;
 			Port = port;
+			UseTls = useTls;
 			Scope = scope;
 		}
 
@@ -20,6 +22,7 @@ namespace Quaestor.KeyValueStore
 		public string ServiceName { get; }
 		public string HostName { get; }
 		public int Port { get; }
+		public bool UseTls { get; }
 
 		protected bool Equals(ServiceLocation other)
 		{

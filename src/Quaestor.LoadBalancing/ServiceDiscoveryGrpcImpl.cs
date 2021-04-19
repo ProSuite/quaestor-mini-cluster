@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
+using Grpc.HealthCheck;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
@@ -17,46 +18,41 @@ namespace Quaestor.LoadBalancing
 	public class ServiceDiscoveryGrpcImpl : ServiceDiscoveryGrpc.ServiceDiscoveryGrpcBase
 	{
 		private readonly ServiceRegistry _serviceRegistry;
-		[CanBeNull] private readonly ChannelCredentials _clientChannelCredentials;
+		[CanBeNull] private readonly string _clientCertificate;
 
 		private readonly IDictionary<ServiceLocation, Channel> _channels =
 			new Dictionary<ServiceLocation, Channel>();
 
 		private static readonly Random _random = new Random();
 
-		private bool _lastRequestFailed;
-
 		private readonly ILogger<ServiceDiscoveryGrpcImpl> _logger =
 			Log.CreateLogger<ServiceDiscoveryGrpcImpl>();
 
 		public ServiceDiscoveryGrpcImpl(
 			[NotNull] ServiceRegistry serviceRegistry,
-			[CanBeNull] ChannelCredentials clientChannelCredentials)
+			[CanBeNull] string clientCertificate = null)
 		{
 			_serviceRegistry = serviceRegistry;
 
-			_clientChannelCredentials = clientChannelCredentials;
+			_clientCertificate = clientCertificate;
 		}
 
 		public override Task<LocateServicesResponse> LocateServices(
 			LocateServicesRequest request, ServerCallContext context)
 		{
-			_lastRequestFailed = false;
-
 			LocateServicesResponse response = null;
 
 			try
 			{
 				response = new LocateServicesResponse();
 
-				IList<ServiceLocationMsg> serviceLocationMessages =
-					LocateRandom(request);
+				IList<ServiceLocationMsg> serviceLocationMessages = LocateRandom(request);
 
 				response.ServiceLocations.AddRange(serviceLocationMessages);
 			}
 			catch (Exception e)
 			{
-				_lastRequestFailed = true;
+				SetUnhealthy();
 
 				_logger.LogError(e, "Error discovering service {serviceName}", request.ServiceName);
 			}
@@ -67,8 +63,6 @@ namespace Quaestor.LoadBalancing
 		public override async Task<LocateServicesResponse> LocateTopServices(
 			LocateServicesRequest request, ServerCallContext context)
 		{
-			_lastRequestFailed = false;
-
 			LocateServicesResponse response = null;
 
 			try
@@ -81,17 +75,23 @@ namespace Quaestor.LoadBalancing
 			}
 			catch (Exception e)
 			{
-				_lastRequestFailed = true;
-
 				_logger.LogError(e, "Error discovering service {serviceName}", request.ServiceName);
 			}
 
 			return response;
 		}
 
-		public bool IsHealthy()
+		/// <summary>
+		///     The name of this service: ServiceDiscoveryGrpc
+		///     It can be checked using the grpc Health Check service.
+		/// </summary>
+		public string ServiceName => nameof(ServiceDiscoveryGrpc);
+
+		public HealthServiceImpl Health { get; set; }
+
+		private void SetUnhealthy()
 		{
-			return !_lastRequestFailed;
+			Health?.SetStatus(ServiceName, HealthCheckResponse.Types.ServingStatus.NotServing);
 		}
 
 		private IList<ServiceLocationMsg> LocateRandom(
@@ -150,15 +150,13 @@ namespace Quaestor.LoadBalancing
 
 		private ChannelBase GetChannel(ServiceLocation serviceLocation)
 		{
-			if (_clientChannelCredentials == null)
-			{
-				return null;
-			}
-
 			if (!_channels.TryGetValue(serviceLocation, out Channel channel))
 			{
+				ChannelCredentials channelCredentials = GrpcUtils.CreateChannelCredentials(
+					serviceLocation.UseTls, _clientCertificate);
+
 				channel = GrpcUtils.CreateChannel(serviceLocation.HostName, serviceLocation.Port,
-					_clientChannelCredentials);
+					channelCredentials);
 
 				_channels.Add(serviceLocation, channel);
 			}
@@ -199,12 +197,6 @@ namespace Quaestor.LoadBalancing
 
 			// Shuffle first because typically many will have rank 0 -> try not to return the same one for concurrent requests
 			Shuffle(allServices);
-
-			if (_clientChannelCredentials == null)
-			{
-				// Revert to random (use first n of shuffled services)
-				return ToServiceLocationMessages(allServices, request.MaxCount).ToList();
-			}
 
 			var servicesByDesirability =
 				await GetServicesRankedByLoad(allServices, request.MaxCount);

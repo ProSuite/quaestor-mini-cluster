@@ -8,6 +8,8 @@ namespace Quaestor.MiniCluster
 
 		int Port { get; }
 
+		bool UseTls { get; }
+
 		IList<string> ServiceNames { get; }
 	}
 }

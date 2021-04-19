@@ -12,7 +12,7 @@ namespace Quaestor.MiniCluster.Guardian
 	[UsedImplicitly]
 	internal class Program
 	{
-		static async Task Main(string[] args)
+		private static async Task Main(string[] args)
 		{
 			// TODO: log4net config? Serilog?
 			//const string loggerTemplate = @"{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u4}]<{ThreadId}> [{SourceContext:l}] {Message:lj}{NewLine}{Exception}";
@@ -27,7 +27,8 @@ namespace Quaestor.MiniCluster.Guardian
 			//		rollingInterval: RollingInterval.Day, retainedFileCountLimit: 90)
 			//	.CreateLogger();
 
-			ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+			ILoggerFactory loggerFactory =
+				LoggerFactory.Create(builder => { builder.AddConsole(); });
 
 			Log.SetLoggerFactory(loggerFactory);
 
@@ -54,7 +55,8 @@ namespace Quaestor.MiniCluster.Guardian
 						IHostEnvironment env = hostingContext.HostingEnvironment;
 
 						configuration
-							.AddYamlFile("quaestor.config.yml", optional: true, reloadOnChange: true)
+							.AddYamlFile("quaestor.config.yml", optional: true,
+								reloadOnChange: true)
 							.AddYamlFile($"quaestor.config.{env.EnvironmentName}.yml", true, true);
 
 						//configuration.AddEnvironmentVariables();
@@ -67,10 +69,10 @@ namespace Quaestor.MiniCluster.Guardian
 				.ConfigureServices((hostContext, services) =>
 				{
 					// Allow running as windows service by implementing HostedService
-					services.AddHostedService<GuardianService>();
+					services.AddHostedService<AgentGuardianService>();
 
 					// .net core dependency injection will provide configuration to constructor
-					// of GuardianService:
+					// of AgentGuardianService:
 					services.Configure<IConfiguration>(hostContext.Configuration);
 				});
 		}

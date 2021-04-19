@@ -11,6 +11,11 @@ namespace Quaestor.MiniCluster
 		string ProcessName { get; }
 
 		/// <summary>
+		///     The type of agent. Possibly one of the the WellKnownAgentType types./>
+		/// </summary>
+		string AgentType { get; set; }
+
+		/// <summary>
 		///     If true, this instance will not be monitored for heart beats and its health status
 		///     will not be checked.
 		/// </summary>
@@ -19,7 +24,7 @@ namespace Quaestor.MiniCluster
 		/// <summary>
 		///     Whether the process is currently running or not.
 		/// </summary>
-		bool IsRunning { get; }
+		bool IsKnownRunning { get; }
 
 		/// <summary>
 		///     The number of times the re-start process has failed.
