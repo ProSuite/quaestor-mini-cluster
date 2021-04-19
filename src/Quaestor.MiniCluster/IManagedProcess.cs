@@ -13,7 +13,7 @@ namespace Quaestor.MiniCluster
 		/// <summary>
 		///     The type of agent. Possibly one of the the WellKnownAgentType types./>
 		/// </summary>
-		string AgentType { get; set; }
+		string AgentType { get; }
 
 		/// <summary>
 		///     If true, this instance will not be monitored for heart beats and its health status

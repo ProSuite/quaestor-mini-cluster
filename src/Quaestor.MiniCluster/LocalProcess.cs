@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.Utilities;
@@ -29,27 +30,40 @@ namespace Quaestor.MiniCluster
 		/// <summary>
 		///     Initializes a new instance of the <see cref="LocalProcess" /> class.
 		/// </summary>
+		/// <param name="agentType">
+		///     The type of agent. Possibly one of the
+		///     <see cref="WellKnownAgentType" /> types.
+		/// </param>
+		/// <param name="executablePath">The path to the executable.</param>
+		/// <param name="commandLineArguments"></param>
 		/// <param name="hostName">The process' service host name</param>
 		/// <param name="port">The process' service port number</param>
 		/// <param name="credentials">
 		///     Client credentials to connect to the
 		///     process' service.
 		/// </param>
-		public LocalProcess(string hostName = _localhost,
+		public LocalProcess([NotNull] string agentType,
+		                    [NotNull] string executablePath,
+		                    [CanBeNull] string commandLineArguments,
+		                    [CanBeNull] string hostName = _localhost,
 		                    int port = -1,
-		                    ChannelCredentials credentials = null)
+		                    [CanBeNull] ChannelCredentials credentials = null)
 		{
+			AgentType = agentType;
+			ExecutablePath = executablePath;
+			CommandLineArguments = commandLineArguments;
+
 			HostName = hostName;
 			Port = port;
 
 			_credentials = credentials ?? ChannelCredentials.Insecure;
 		}
 
-		public string AgentType { get; set; }
+		public string ExecutablePath { get; }
 
-		public string ExecutablePath { get; set; }
+		[CanBeNull] public string CommandLineArguments { get; }
 
-		public string CommandLineArguments { get; set; }
+		public string AgentType { get; }
 
 		public string HostName { get; }
 
@@ -116,7 +130,7 @@ namespace Quaestor.MiniCluster
 					Port = GrpcUtils.GetFreeTcpPort();
 				}
 
-				commandLineArgs = CommandLineArguments
+				commandLineArgs = CommandLineArguments?
 					.Replace("{HostName}", HostName)
 					.Replace("{Port}", Port.ToString());
 

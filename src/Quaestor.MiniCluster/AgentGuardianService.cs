@@ -138,12 +138,9 @@ namespace Quaestor.MiniCluster
 					GrpcUtils.CreateChannelCredentials(agentConfiguration.UseTls,
 						agentConfiguration.ClientCertificate);
 
-				var managedProcess = new LocalProcess(hostName, port, credentials)
-				{
-					AgentType = agentConfiguration.AgentType,
-					ExecutablePath = agentConfiguration.ExecutablePath,
-					CommandLineArguments = agentConfiguration.CommandLineArguments
-				};
+				var managedProcess = new LocalProcess(agentConfiguration.AgentType,
+					agentConfiguration.ExecutablePath, agentConfiguration.CommandLineArguments,
+					hostName, port, credentials);
 
 				if (agentConfiguration.ServiceNames != null)
 				{

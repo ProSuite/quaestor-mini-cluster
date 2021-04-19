@@ -42,11 +42,9 @@ namespace HelloWorld
 			int port = 5432;
 			int unhealthyAfterSeconds = 75;
 
-			var managedProcess = new LocalProcess("localhost", port)
-			{
-				ExecutablePath = exePath,
-				CommandLineArguments = $"{port} {unhealthyAfterSeconds}"
-			};
+			var managedProcess = new LocalProcess(
+				WellKnownAgentType.Worker.ToString(), exePath, $"{port} {unhealthyAfterSeconds}",
+				"localhost", port);
 
 			managedProcess.ServiceNames.Add("Worker");
 
