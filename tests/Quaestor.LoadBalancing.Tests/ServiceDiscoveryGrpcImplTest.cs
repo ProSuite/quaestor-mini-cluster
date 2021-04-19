@@ -72,8 +72,8 @@ namespace Quaestor.LoadBalancing.Tests
 		{
 			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient client = GetClient();
 
-			var response = client.LocateServices(
-				new LocateServicesRequest
+			DiscoverServicesResponse response = client.DiscoverServices(
+				new DiscoverServicesRequest
 				{
 					ServiceName = _serviceName,
 					MaxCount = 1
@@ -91,8 +91,8 @@ namespace Quaestor.LoadBalancing.Tests
 		{
 			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient client = GetClient();
 
-			var response = client.LocateServices(
-				new LocateServicesRequest
+			DiscoverServicesResponse response = client.DiscoverServices(
+				new DiscoverServicesRequest
 				{
 					ServiceName = _serviceName,
 					MaxCount = 3
@@ -115,8 +115,8 @@ namespace Quaestor.LoadBalancing.Tests
 			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient client = GetClient();
 
 			// All load at 0
-			LocateServicesResponse response = client.LocateTopServices(
-				new LocateServicesRequest
+			DiscoverServicesResponse response = client.DiscoverTopServices(
+				new DiscoverServicesRequest
 				{
 					ServiceName = _serviceName,
 					MaxCount = 1
@@ -144,8 +144,8 @@ namespace Quaestor.LoadBalancing.Tests
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			response = client.LocateTopServices(
-				new LocateServicesRequest
+			response = client.DiscoverTopServices(
+				new DiscoverServicesRequest
 				{
 					ServiceName = _serviceName,
 					MaxCount = 3
@@ -174,8 +174,8 @@ namespace Quaestor.LoadBalancing.Tests
 
 			watch = Stopwatch.StartNew();
 
-			response = client.LocateTopServices(
-				new LocateServicesRequest
+			response = client.DiscoverTopServices(
+				new DiscoverServicesRequest
 				{
 					ServiceName = _serviceName,
 					MaxCount = 3

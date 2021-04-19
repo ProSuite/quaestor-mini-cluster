@@ -16,20 +16,20 @@ service ServiceDiscoveryGrpc {
 	/**
     * Provide the service locations for a given service name, ordered randomly.
     */
-	rpc LocateServices(LocateServicesRequest) returns (LocateServicesResponse) {}
+	rpc DiscoverServices(DiscoverServicesRequest) returns (DiscoverServicesResponse) {}
 
 	/**
     * Provide the best service locations for a given service based on the 
 		  provided load reports of the respective services, ordered according to the 
 			implemented load balancing algorithm.
     */
-	rpc LocateTopServices(LocateServicesRequest) returns (LocateServicesResponse) {}
+	rpc DiscoverTopServices(DiscoverServicesRequest) returns (DiscoverServicesResponse) {}
 }
 
 /**
   * The service discovery request.
   */
-message LocateServicesRequest {
+message DiscoverServicesRequest {
 
 	/** The global scope of the service (e.g. cluster name). */
 	string scope = 1;
@@ -44,7 +44,7 @@ message LocateServicesRequest {
 /**
   * The service discovery response.
   */
-message LocateServicesResponse {
+message DiscoverServicesResponse {
 
 	/** The set of service locations. */
 	repeated ServiceLocationMsg service_locations = 1;

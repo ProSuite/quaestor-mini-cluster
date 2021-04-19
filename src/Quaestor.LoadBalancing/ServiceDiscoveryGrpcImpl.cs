@@ -37,14 +37,14 @@ namespace Quaestor.LoadBalancing
 			_clientCertificate = clientCertificate;
 		}
 
-		public override Task<LocateServicesResponse> LocateServices(
-			LocateServicesRequest request, ServerCallContext context)
+		public override Task<DiscoverServicesResponse> DiscoverServices(
+			DiscoverServicesRequest request, ServerCallContext context)
 		{
-			LocateServicesResponse response = null;
+			DiscoverServicesResponse response = null;
 
 			try
 			{
-				response = new LocateServicesResponse();
+				response = new DiscoverServicesResponse();
 
 				IList<ServiceLocationMsg> serviceLocationMessages = LocateRandom(request);
 
@@ -60,16 +60,16 @@ namespace Quaestor.LoadBalancing
 			return Task.FromResult(response);
 		}
 
-		public override async Task<LocateServicesResponse> LocateTopServices(
-			LocateServicesRequest request, ServerCallContext context)
+		public override async Task<DiscoverServicesResponse> DiscoverTopServices(
+			DiscoverServicesRequest request, ServerCallContext context)
 		{
-			LocateServicesResponse response = null;
+			DiscoverServicesResponse response = null;
 
 			try
 			{
-				response = new LocateServicesResponse();
+				response = new DiscoverServicesResponse();
 
-				var result = await GetTopServiceLocationMessages(request);
+				IList<ServiceLocationMsg> result = await GetTopServiceLocationMessages(request);
 
 				response.ServiceLocations.AddRange(result);
 			}
@@ -95,7 +95,7 @@ namespace Quaestor.LoadBalancing
 		}
 
 		private IList<ServiceLocationMsg> LocateRandom(
-			[NotNull] LocateServicesRequest request)
+			[NotNull] DiscoverServicesRequest request)
 		{
 			IList<ServiceLocation> allServices =
 				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
@@ -190,7 +190,7 @@ namespace Quaestor.LoadBalancing
 		}
 
 		private async Task<IList<ServiceLocationMsg>> GetTopServiceLocationMessages(
-			[NotNull] LocateServicesRequest request)
+			[NotNull] DiscoverServicesRequest request)
 		{
 			var allServices =
 				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
@@ -198,7 +198,7 @@ namespace Quaestor.LoadBalancing
 			// Shuffle first because typically many will have rank 0 -> try not to return the same one for concurrent requests
 			Shuffle(allServices);
 
-			var servicesByDesirability =
+			IList<ServiceLocation> servicesByDesirability =
 				await GetServicesRankedByLoad(allServices, request.MaxCount);
 
 			int maxResultCount = request.MaxCount == 0 ? -1 : request.MaxCount;
