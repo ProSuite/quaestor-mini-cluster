@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -58,8 +59,9 @@ namespace Quaestor.MiniCluster
 
 					var members = _cluster.Members;
 
-					foreach (var member in members)
+					foreach (var member in members.ToList())
 					{
+						// This could be done in parallel. However, we're not in a hurry and the logs would get messy
 						if (member.MonitoringSuspended)
 						{
 							_logger.LogInformation(
