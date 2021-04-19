@@ -1,5 +1,5 @@
 #
-# Shows the load report for a specific service (TestService) at a specific address (localhost:5150)
+# Gets service locations from the load balancer service for a specific service (TestService)
 #
 # Make sure grpcurl.exe (https://github.com/fullstorydev/grpcurl) is in the path
 #
@@ -12,7 +12,7 @@ param (
 	$ServiceName = $(throw "Service name is required.")
 )
 
-Write-host "Checking load for service $ServiceName at address $Address"
+Write-host "Discovering services $ServiceName at address $Address"
 
 $scriptpath = $MyInvocation.MyCommand.Path
 $dir = Split-Path $scriptpath
@@ -22,7 +22,7 @@ Write-host "Changed directory to $dir"
 $serviceNameJson= '{\"service_name\": \"' + $ServiceName + '\"}'
 
 Write-host "grpcurl response:"
-grpcurl.exe -d $serviceNameJson -plaintext -import-path ..\src\Quaestor.LoadReporting -proto load_reporting.proto $Address Quaestor.LoadReporting.LoadReportingGrpc/ReportLoad
+grpcurl.exe -d $serviceNameJson -plaintext -import-path ..\src\Quaestor.ServiceDiscovery -proto service_discovery.proto $Address Quaestor.ServiceDiscovery.ServiceDiscoveryGrpc/DiscoverServices
 
 Write-Host -NoNewLine 'Press any key to continue...';
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
