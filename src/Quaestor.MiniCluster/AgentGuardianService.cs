@@ -88,8 +88,10 @@ namespace Quaestor.MiniCluster
 		{
 			_logger.LogInformation("Stopping Service");
 
-			// TODO: Graceful stopping of all processes!
-			_cluster?.Abort();
+			bool result = _cluster != null &&
+			              await _cluster.ShutdownAsync(new TimeSpan(0, 0, 5));
+
+			_logger.LogInformation("All agents have been stopped: {result}", result);
 
 			await base.StopAsync(cancellationToken);
 		}
@@ -140,7 +142,11 @@ namespace Quaestor.MiniCluster
 
 				var managedProcess = new LocalProcess(agentConfiguration.AgentType,
 					agentConfiguration.ExecutablePath, agentConfiguration.CommandLineArguments,
-					hostName, port, credentials);
+					hostName, port, credentials)
+				{
+					EnvironmentVariables = agentConfiguration.EnvironmentVariables,
+					ClusterShutdownAction = agentConfiguration.ClusterShutdownAction
+				};
 
 				if (agentConfiguration.ServiceNames != null)
 				{

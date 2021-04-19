@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Quaestor.Environment;
 
 namespace Quaestor.MiniCluster
 {
@@ -25,6 +26,11 @@ namespace Quaestor.MiniCluster
 		///     Whether the process is currently running or not.
 		/// </summary>
 		bool IsKnownRunning { get; }
+
+		/// <summary>
+		///     The action to be performed for this agent when the cluster shuts down.
+		/// </summary>
+		ShutdownAction ClusterShutdownAction { get; set; }
 
 		/// <summary>
 		///     The number of times the re-start process has failed.

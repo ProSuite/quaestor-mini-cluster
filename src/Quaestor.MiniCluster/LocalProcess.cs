@@ -62,17 +62,6 @@ namespace Quaestor.MiniCluster
 		public string ExecutablePath { get; }
 
 		[CanBeNull] public string CommandLineArguments { get; }
-
-		public string AgentType { get; }
-
-		public string HostName { get; }
-
-		public int Port { get; private set; }
-
-		public bool UseTls => _credentials != ChannelCredentials.Insecure;
-
-		public IList<string> ServiceNames { get; } = new List<string>();
-
 		public Process Process { get; set; }
 
 		public Channel Channel { get; private set; }
@@ -83,7 +72,23 @@ namespace Quaestor.MiniCluster
 		/// </summary>
 		public bool PrioritizeAvailability { get; set; }
 
+		public Dictionary<string, string> EnvironmentVariables { get; set; }
+
+		#region IServerProcess members
+
+		public string HostName { get; }
+
+		public int Port { get; private set; }
+
+		public bool UseTls => _credentials != ChannelCredentials.Insecure;
+
+		public IList<string> ServiceNames { get; } = new List<string>();
+
+		#endregion
+
 		#region IManagedProcess members
+
+		public string AgentType { get; }
 
 		public string ProcessName => Path.GetFileNameWithoutExtension(ExecutablePath);
 
@@ -96,6 +101,8 @@ namespace Quaestor.MiniCluster
 		public int StartupFailureCount { get; set; }
 
 		public bool IsKnownRunning => !Process?.HasExited ?? false;
+
+		public ShutdownAction ClusterShutdownAction { get; set; }
 
 		public async Task<bool> IsServingAsync()
 		{
@@ -140,7 +147,8 @@ namespace Quaestor.MiniCluster
 					"Starting {executablePath} with parameters {commandLineArgs}...",
 					executablePath, commandLineArgs);
 
-				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs, false, true);
+				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs,
+					false, true, EnvironmentVariables);
 
 				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(5);
 

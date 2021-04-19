@@ -21,7 +21,16 @@ namespace Quaestor.Environment
 		/// </summary>
 		public string CommandLineArguments { get; set; }
 
+		/// <summary>
+		///     The list of environment variables with their respective values to be set
+		///     before starting the process.
+		/// </summary>
 		public Dictionary<string, string> EnvironmentVariables { get; set; }
+
+		/// <summary>
+		///     The action to be performed for this agent when the cluster shuts down.
+		/// </summary>
+		public ShutdownAction ClusterShutdownAction { get; set; }
 
 		/// <summary>
 		///     The name or IP address of the host in which the executable is started.

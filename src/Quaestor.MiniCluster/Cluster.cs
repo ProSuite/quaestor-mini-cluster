@@ -123,7 +123,14 @@ namespace Quaestor.MiniCluster
 					ServiceRegistrar?.EnsureRemoved(serverProcess);
 				}
 
-				return m.TryShutdownAsync(timeout);
+				if (m.ClusterShutdownAction == ShutdownAction.Kill)
+				{
+					m.Kill();
+				}
+
+				//return m.TryShutdownAsync(timeout);
+
+				return Task.FromResult(true);
 			}));
 
 			return shutDownResults.All(r => r);

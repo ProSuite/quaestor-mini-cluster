@@ -1,9 +1,9 @@
 # Configuration file for quaestor console application
 # This file will be searched in the directory provided by the --configDir command line option
-# If not provided it is searched in the current directory.
+# If --configDir is not specified it is expected in the current directory.
 #
 # Configuration of the service discovery / load balancer service
-# This section is relevant if quaestor is started with the load-balancer option
+# This section is relevant if quaestor is started with the 'load-balancer' option
 serverConfig:
   hostName: localhost
   port: 5150
@@ -12,7 +12,7 @@ serverConfig:
   enforceMutualTls: false
 #
 # Configuration of the cluster management
-# # This section is relevant if quaestor is started with the cluster option
+# # This section is relevant if quaestor is started with the 'cluster' option
 clusterConfig:
   name: example
   # The heart beat interval in seconds.
@@ -23,41 +23,56 @@ clusterConfig:
   memberMaxShutdownTimeSeconds: 60
   # The number of times an agent re-start is attempted in case it is unhealthy or not running 
   memberMaxStartupRetries: 25
+
 # List of agents that are managed by the cluster. Currently only local processes are supported.
 agents:
   Worker:
     executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
     commandLineArguments: "{Port} 75"
+    processCount: 4
+    # Currently valid shutdown actions: {None, Kill}
+    clusterShutdownAction: Kill
+    environmentVariables:
     hostName: 127.0.0.1
     useTLS: false
-    processCount: 4
+    # The list of ports (must correspond with the processCount from above)
     ports: [ 5161, 5162, 5163, 5164 ]
+    # The list of services that respond to health check requests
     serviceNames:
     - Worker
+
   LoadBalancer:
     executablePath: quaestor.exe
     commandLineArguments: "load-balancer"
+    processCount: 1
+    clusterShutdownAction: Kill
+    # The dictionary of key: value pairs that should be added as environment variables
     environmentVariables:
-      QUAESTOR_LOGFILE_SUFFIX example_LB
-      TEMP C:\Temp
+      QUAESTOR_LOGFILE_SUFFIX: LoadBalancer
+      TEMP: C:\Temp
     hostName: localhost
     useTLS: false
-    processCount: 1
     ports:
     - 5150
     serviceNames:
     - ServiceDiscoveryGrpc
-  # Example for a distributed keyvalue store to be used by the service discovery:
+
+  # Example for a distributed keyvalue store to be used by the service discovery. Remove
+  # this section to use a local in-memory key-value store as service registry.
   KeyValueStore:
-    # Executable: etcd.exe (make sure it is in the path)
+    # Executable: https://github.com/etcd-io/etcd/releases/ (make sure it is in the path environment variable)
     executablePath: etcd.exe
     # It works without arguments but TLS is recommended. Example with auto-generated pem files: 
     # --name cluster_test --data-dir C:\bin\etcd\data\topgis_qa.etcd --auto-tls --advertise-client-urls=https://127.0.0.1:2379 --listen-client-urls=https://127.0.0.1:2379
     commandLineArguments:
+    processCount: 1
+    # Leave it running
+    clusterShutdownAction: None
     hostName: 127.0.0.1
     useTLS: false
-    processCount: 1
     # The official etcd default port for client requests is 2379
     ports:
     - 2379
+    # Etcd's health check implementation does not respond for specific service names, but it
+    # supports health check requests with empty service names.
     serviceNames: []
