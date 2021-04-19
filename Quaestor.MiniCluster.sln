@@ -8,6 +8,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloWorld", "HelloWorld", "{583579C2-6BC5-4CF2-9D95-276D2C6973F8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C12CA5A1-BC58-4128-AA0A-53531D4D99FE}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Environment", "src\Quaestor.Environment\Quaestor.Environment.csproj", "{8F677CAD-A8DF-473E-B714-131027F37C8F}"
 EndProject

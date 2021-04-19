@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <Version>0.0.3</Version>
+    <Authors>The ProSuite Authors</Authors>
+    <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>
+    <Company />
+  </PropertyGroup>
+</Project>

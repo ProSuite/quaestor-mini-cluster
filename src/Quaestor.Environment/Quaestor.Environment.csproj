@@ -2,15 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.1</Version>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Authors>The ProSuite Authors</Authors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Quaestor.MiniCluster.Key.snk</AssemblyOriginatorKeyFile>
     <Description>The quaestor environment.</Description>
-    <Copyright>Copyright (c) 2021 The ProSuite Authors</Copyright>
-    <Company />
   </PropertyGroup>
 
   <ItemGroup>
