@@ -79,7 +79,7 @@ namespace Quaestor.MiniCluster
 
 			ConfigureClusterAgents();
 
-			_cluster.StartAsync();
+			_ = await _cluster.StartAsync();
 
 			await base.StartAsync(cancellationToken);
 		}

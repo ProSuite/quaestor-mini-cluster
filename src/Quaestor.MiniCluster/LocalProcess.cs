@@ -150,7 +150,8 @@ namespace Quaestor.MiniCluster
 				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs,
 					false, true, EnvironmentVariables);
 
-				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(10);
+				// Configurable? Or don't even wait for the health check and only start it?
+				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(8);
 
 				// Let the process start the services...
 				await Task.Delay(startupTimeAverage);

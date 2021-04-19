@@ -10,7 +10,7 @@ serverConfig:
   certificate:
   privateKeyFile:
   enforceMutualTls: false
-#
+
 # Configuration of the cluster management
 # # This section is relevant if quaestor is started with the 'cluster' option
 clusterConfig:
@@ -20,11 +20,17 @@ clusterConfig:
   # The time-out for the health check performed on each agent during the heart beat
   memberResponseTimeOutSeconds: 5
   # The time-out for an agent shut-down in case it is not healthy (NOT IMPLEMENTED for local process)
-  memberMaxShutdownTimeSeconds: 60
+  memberMaxShutdownTimeSeconds: 0
   # The number of times an agent re-start is attempted in case it is unhealthy or not running 
   memberMaxStartupRetries: 25
 
 # List of agents that are managed by the cluster. Currently only local processes are supported.
+# All agents are started by the cluster and checked for health during the heart beat.
+# Some well-known agent types are:
+# KeyValueStore (see below for an example): Etcd key-value store to be used as service registry
+# Worker: Agents to be used in a local in-memory key-value store, in case no KeyValueStore agent
+#         has been defined.
+# However, any other agent type can be defined.
 agents:
   Worker:
     executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
@@ -32,7 +38,9 @@ agents:
     processCount: 4
     # Currently valid shutdown actions: {None, Kill}
     clusterShutdownAction: Kill
+    # The dictionary of key: value pairs that should be added as environment variables
     environmentVariables:
+    # The host name to be used for health-checks and service discovery by the LoadBalancer
     hostName: 127.0.0.1
     useTLS: false
     # The list of ports (must correspond with the processCount from above)
@@ -48,7 +56,7 @@ agents:
     clusterShutdownAction: Kill
     # The dictionary of key: value pairs that should be added as environment variables
     environmentVariables:
-      QUAESTOR_LOGFILE_SUFFIX: LoadBalancer
+      QUAESTOR_LOGFILE_SUFFIX: Load_Balancing
       TEMP: C:\Temp
     hostName: localhost
     useTLS: false
@@ -58,7 +66,7 @@ agents:
     - ServiceDiscoveryGrpc
 
   # Example for a distributed keyvalue store to be used by the service discovery. Remove
-  # this section to use a local in-memory key-value store as service registry.
+  # this section to use a local in-memory key-value store containing just the Worker agents.
   KeyValueStore:
     # Executable: https://github.com/etcd-io/etcd/releases/ (make sure it is in the path environment variable)
     executablePath: etcd.exe
