@@ -150,18 +150,17 @@ namespace Quaestor.MiniCluster
 				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs,
 					false, true, EnvironmentVariables);
 
-				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(5);
+				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(10);
 
-				TimeSpan startupTimeout = TimeSpan.FromSeconds(15);
+				// Let the process start the services...
+				await Task.Delay(startupTimeAverage);
 
-				bool healthy = await TaskUtils.TimeoutAfter(IsServingAsync(), startupTimeAverage);
+				bool healthy = await IsServingAsync();
 
 				if (healthy)
 				{
-					return true;
+					_logger.LogInformation("Successfully started {process}", this);
 				}
-
-				healthy = await TaskUtils.TimeoutAfter(IsServingAsync(), startupTimeout);
 
 				return healthy;
 			}
@@ -320,7 +319,8 @@ namespace Quaestor.MiniCluster
 			}
 			catch (Exception e)
 			{
-				_logger.LogError(e, "Error checking health for service {serviceName} of {process}",
+				_logger.LogWarning(e,
+					"Error checking health for service {serviceName} of {process}",
 					serviceName, this);
 
 				return false;
