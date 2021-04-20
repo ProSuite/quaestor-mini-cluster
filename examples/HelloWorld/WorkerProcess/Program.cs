@@ -49,7 +49,7 @@ namespace WorkerProcess
 			{
 				ProcessCapacity = 1,
 				CurrentProcessCount = 0,
-				CpuUsage = 0.12345
+				ServerUtilization = 0.12345
 			});
 
 			var server =

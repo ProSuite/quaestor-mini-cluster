@@ -8,12 +8,12 @@ namespace Quaestor.LoadReporting
 	{
 		int ProcessCapacity { get; set; }
 		int CurrentProcessCount { get; set; }
-		double CpuUsage { get; set; }
+		double ServerUtilization { get; set; }
 
-		int ClientCallsFinished { get; set; }
-		int ClientCallsStarted { get; set; }
 		DateTime ReportStart { get; }
 
-		void ResetClientStats();
+		double KnownLoadRate { get; set; }
+
+		void Reset();
 	}
 }

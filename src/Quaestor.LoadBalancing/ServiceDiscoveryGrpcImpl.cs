@@ -279,6 +279,11 @@ namespace Quaestor.LoadBalancing
 			LoadReportResponse loadReportResponse =
 				await loadClient.ReportLoadAsync(loadRequest);
 
+			if (loadReportResponse.KnownLoadRate >= 0)
+			{
+				return loadReportResponse.KnownLoadRate;
+			}
+
 			int capacity = loadReportResponse.ServerStats.RequestCapacity;
 
 			if (capacity == 0)
@@ -289,7 +294,7 @@ namespace Quaestor.LoadBalancing
 			double workload = (double) loadReportResponse.ServerStats.CurrentRequests /
 			                  capacity;
 
-			double cpuUsage = loadReportResponse.ServerStats.CpuUsage;
+			double cpuUsage = loadReportResponse.ServerStats.ServerUtilization;
 
 			var desirability = cpuUsage > 0 ? workload * cpuUsage : workload;
 

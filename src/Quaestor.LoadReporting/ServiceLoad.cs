@@ -13,32 +13,30 @@ namespace Quaestor.LoadReporting
 		{
 			ProcessCapacity = processCapacity;
 
-			ResetClientStats();
+			Reset();
 
 			// Initialize last CPU time:
 			GetCpuUsage();
 		}
 
+		public DateTime ReportStart { get; private set; }
+
+		public double KnownLoadRate { get; set; } = -1;
+
 		public int ProcessCapacity { get; set; }
 		public int CurrentProcessCount { get; set; }
-		public double CpuUsage { get; set; }
-
-		public int ClientCallsStarted { get; set; }
-		public int ClientCallsFinished { get; set; }
-		public DateTime ReportStart { get; private set; }
+		public double ServerUtilization { get; set; }
 
 		[PublicAPI]
 		public void StartRequest()
 		{
 			CurrentProcessCount++;
-			ClientCallsStarted++;
 		}
 
 		[PublicAPI]
 		public void EndRequest()
 		{
 			CurrentProcessCount--;
-			ClientCallsFinished++;
 		}
 
 		public double GetCpuUsage()
@@ -72,11 +70,9 @@ namespace Quaestor.LoadReporting
 			return -1;
 		}
 
-		public void ResetClientStats()
+		public void Reset()
 		{
 			ReportStart = DateTime.Now;
-			ClientCallsStarted = 0;
-			ClientCallsFinished = 0;
 		}
 
 		public ServiceLoad Clone()
@@ -84,9 +80,7 @@ namespace Quaestor.LoadReporting
 			return new ServiceLoad(ProcessCapacity)
 			{
 				CurrentProcessCount = CurrentProcessCount,
-				CpuUsage = CpuUsage,
-				ClientCallsStarted = ClientCallsStarted,
-				ClientCallsFinished = ClientCallsFinished,
+				ServerUtilization = ServerUtilization,
 				ReportStart = ReportStart
 			};
 		}
@@ -95,8 +89,7 @@ namespace Quaestor.LoadReporting
 		{
 			return
 				$"{CurrentProcessCount} of {ProcessCapacity} ongoing requests, " +
-				$"{ClientCallsStarted} client requests started, {ClientCallsFinished} finished. " +
-				$"CPU: {CpuUsage}";
+				$"server utilization: {ServerUtilization}";
 		}
 	}
 }

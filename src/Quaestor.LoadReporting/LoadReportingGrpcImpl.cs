@@ -20,8 +20,10 @@ namespace Quaestor.LoadReporting
 		public override Task<LoadReportResponse> ReportLoad(LoadReportRequest request,
 		                                                    ServerCallContext context)
 		{
+			var result = new LoadReportResponse();
 			var serverStats = new ServerStats();
-			var clientStats = new ClientStats();
+
+			result.ServerStats = serverStats;
 
 			try
 			{
@@ -41,15 +43,14 @@ namespace Quaestor.LoadReporting
 							$"Service {request.ServiceName} has no load.")));
 				}
 
+				result.TimestampTicks = currentLoad.ReportStart.Ticks;
+				result.KnownLoadRate = currentLoad.KnownLoadRate;
+
 				serverStats.RequestCapacity = currentLoad.ProcessCapacity;
 				serverStats.CurrentRequests = currentLoad.CurrentProcessCount;
-				serverStats.CpuUsage = currentLoad.CpuUsage;
+				serverStats.ServerUtilization = currentLoad.ServerUtilization;
 
-				clientStats.NumCallsFinished = currentLoad.ClientCallsFinished;
-				clientStats.NumCallsStarted = currentLoad.ClientCallsStarted;
-				clientStats.TimestampTicks = currentLoad.ReportStart.Ticks;
-
-				currentLoad.ResetClientStats();
+				currentLoad.Reset();
 			}
 			catch (Exception e)
 			{
@@ -58,12 +59,6 @@ namespace Quaestor.LoadReporting
 
 				return Task.FromException<LoadReportResponse>(rpcException);
 			}
-
-			var result = new LoadReportResponse
-			{
-				ServerStats = serverStats,
-				ClientStats = clientStats
-			};
 
 			return Task.FromResult(result);
 		}

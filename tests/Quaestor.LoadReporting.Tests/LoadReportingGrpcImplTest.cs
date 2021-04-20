@@ -31,12 +31,23 @@ namespace Quaestor.LoadReporting.Tests
 
 			_actualLoad.ProcessCapacity = 5;
 			_actualLoad.CurrentProcessCount = 3;
-			_actualLoad.CpuUsage = 12.345;
+			_actualLoad.ServerUtilization = 12.345;
 
-			_actualLoad.ClientCallsStarted = 13;
-			_actualLoad.ClientCallsFinished = 11;
+			// Note: The actualLoad's start time is reset on report (same instance in unit test!)
+			var expectedLoad = _actualLoad.Clone();
 
-			// Note: The actualLoad's client stats are reset on report (same instance in unit test!)
+			AssertCorrectReport(client, expectedLoad);
+		}
+
+		[Test]
+		public void CanReportKnownLoadRate()
+		{
+			LoadReportingGrpc.LoadReportingGrpcClient client = GetClient();
+
+			AssertCorrectReport(client, _actualLoad);
+
+			_actualLoad.KnownLoadRate = 0.987654;
+
 			var expectedLoad = _actualLoad.Clone();
 
 			AssertCorrectReport(client, expectedLoad);
@@ -45,7 +56,7 @@ namespace Quaestor.LoadReporting.Tests
 		[Test]
 		public void CanReportCpuLoad()
 		{
-			_actualLoad.CpuUsage = _actualLoad.GetCpuUsage();
+			_actualLoad.ServerUtilization = _actualLoad.GetCpuUsage();
 
 			LoadReportingGrpc.LoadReportingGrpcClient client = GetClient();
 
@@ -59,10 +70,10 @@ namespace Quaestor.LoadReporting.Tests
 
 			Thread.Sleep(10000);
 
-			_actualLoad.CpuUsage = _actualLoad.GetCpuUsage();
+			_actualLoad.ServerUtilization = _actualLoad.GetCpuUsage();
 
 			Console.WriteLine("{0} CPU: {1:0.0}%", Process.GetCurrentProcess().ProcessName,
-				_actualLoad.CpuUsage * 100);
+				_actualLoad.ServerUtilization * 100);
 
 			AssertCorrectReport(client, _actualLoad);
 		}
@@ -70,7 +81,7 @@ namespace Quaestor.LoadReporting.Tests
 		[Test]
 		public void CanGetExceptionForNonExistingService()
 		{
-			_actualLoad.CpuUsage = _actualLoad.GetCpuUsage();
+			_actualLoad.ServerUtilization = _actualLoad.GetCpuUsage();
 
 			LoadReportingGrpc.LoadReportingGrpcClient client = GetClient();
 
@@ -85,17 +96,12 @@ namespace Quaestor.LoadReporting.Tests
 				client.ReportLoad(new LoadReportRequest {ServiceName = ServiceName});
 
 			Assert.NotNull(loadResponse.ServerStats);
-			Assert.NotNull(loadResponse.ClientStats);
 
 			ServerStats serverStats = loadResponse.ServerStats;
-			ClientStats clientStats = loadResponse.ClientStats;
 
 			Assert.AreEqual(actualLoad.ProcessCapacity, serverStats.RequestCapacity);
 			Assert.AreEqual(actualLoad.CurrentProcessCount, serverStats.CurrentRequests);
-			Assert.AreEqual(actualLoad.CpuUsage, serverStats.CpuUsage);
-
-			Assert.AreEqual(actualLoad.ClientCallsStarted, clientStats.NumCallsStarted);
-			Assert.AreEqual(actualLoad.ClientCallsFinished, clientStats.NumCallsFinished);
+			Assert.AreEqual(actualLoad.ServerUtilization, serverStats.ServerUtilization);
 		}
 
 		private static LoadReportingGrpc.LoadReportingGrpcClient GetClient()
