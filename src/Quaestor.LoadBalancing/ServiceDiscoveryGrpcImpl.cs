@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -44,11 +45,17 @@ namespace Quaestor.LoadBalancing
 
 			try
 			{
+				Stopwatch watch = Stopwatch.StartNew();
+
 				response = new DiscoverServicesResponse();
 
-				IList<ServiceLocationMsg> serviceLocationMessages = GetRandomServiceLocationMessages(request);
+				IList<ServiceLocationMsg> serviceLocationMessages =
+					GetRandomServiceLocationMessages(request);
 
 				response.ServiceLocations.AddRange(serviceLocationMessages);
+
+				_logger.LogDebug("Returning {count} service location(s) [{time}ms]",
+					serviceLocationMessages.Count, watch.ElapsedMilliseconds);
 			}
 			catch (Exception e)
 			{
@@ -67,11 +74,16 @@ namespace Quaestor.LoadBalancing
 
 			try
 			{
+				Stopwatch watch = Stopwatch.StartNew();
+
 				response = new DiscoverServicesResponse();
 
 				IList<ServiceLocationMsg> result = await GetTopServiceLocationMessages(request);
 
 				response.ServiceLocations.AddRange(result);
+
+				_logger.LogDebug("Returning {count} service location(s) [{time}ms]", result.Count,
+					watch.ElapsedMilliseconds);
 			}
 			catch (Exception e)
 			{
@@ -89,8 +101,7 @@ namespace Quaestor.LoadBalancing
 		/// </summary>
 		public string ServiceName => nameof(ServiceDiscoveryGrpc);
 
-		[CanBeNull]
-		public HealthServiceImpl Health { get; set; }
+		[CanBeNull] public HealthServiceImpl Health { get; set; }
 
 		private void SetUnhealthy()
 		{
@@ -211,8 +222,6 @@ namespace Quaestor.LoadBalancing
 				yield return serviceLocationMsg;
 			}
 		}
-
-
 
 		private List<ServiceLocation> GetShuffledServices(DiscoverServicesRequest request)
 		{
