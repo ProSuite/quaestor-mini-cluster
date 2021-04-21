@@ -117,7 +117,7 @@ namespace Quaestor.MiniCluster
 				OpenChannel();
 			}
 
-			return await AreServicesHealthy();
+			return await AreServicesHealthyAsync();
 		}
 
 		public async Task<bool> StartAsync()
@@ -289,19 +289,19 @@ namespace Quaestor.MiniCluster
 			_healthClient = new Health.HealthClient(Channel);
 		}
 
-		private async Task<bool> AreServicesHealthy()
+		private async Task<bool> AreServicesHealthyAsync()
 		{
 			if (ServiceNames.Count == 0)
 			{
 				_logger.LogInformation(
-					"{agenttype}: No service names to check, using empty string.", AgentType);
+					"{agentType}: No service names to check, using empty string.", AgentType);
 
-				return await CheckHealth(string.Empty);
+				return await CheckHealthAsync(string.Empty);
 			}
 
 			foreach (string serviceName in ServiceNames)
 			{
-				bool healthy = await CheckHealth(serviceName);
+				bool healthy = await CheckHealthAsync(serviceName);
 
 				if (!healthy)
 				{
@@ -312,26 +312,11 @@ namespace Quaestor.MiniCluster
 			return true;
 		}
 
-		private async Task<bool> CheckHealth(string serviceName)
+		private async Task<bool> CheckHealthAsync(string serviceName)
 		{
-			bool result;
-			try
-			{
-				var healthResponse =
-					await _healthClient.CheckAsync(new HealthCheckRequest {Service = serviceName});
+			var statusCode = await GrpcUtils.IsServingAsync(_healthClient, serviceName);
 
-				result = healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
-			}
-			catch (Exception e)
-			{
-				_logger.LogWarning(e,
-					"Error checking health for service {serviceName} of {process}",
-					serviceName, this);
-
-				return false;
-			}
-
-			return result;
+			return statusCode == StatusCode.OK;
 		}
 
 		private string GetActualExePath()
