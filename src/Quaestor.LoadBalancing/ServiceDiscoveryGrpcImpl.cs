@@ -211,19 +211,26 @@ namespace Quaestor.LoadBalancing
 					yield break;
 				}
 
-				ServiceLocationMsg serviceLocationMsg = new ServiceLocationMsg
-				{
-					Scope = serviceLocation.Scope,
-					ServiceName = serviceLocation.ServiceName,
-					HostName = serviceLocation.HostName,
-					Port = serviceLocation.Port
-				};
+				ServiceLocationMsg serviceLocationMsg = ToServiceLocationMsg(serviceLocation);
 
 				yield return serviceLocationMsg;
 			}
 		}
 
-		private List<ServiceLocation> GetShuffledServices(DiscoverServicesRequest request)
+		private static ServiceLocationMsg ToServiceLocationMsg(ServiceLocation serviceLocation)
+		{
+			ServiceLocationMsg serviceLocationMsg = new ServiceLocationMsg
+			{
+				Scope = serviceLocation.Scope,
+				ServiceName = serviceLocation.ServiceName,
+				HostName = serviceLocation.HostName,
+				Port = serviceLocation.Port
+			};
+
+			return serviceLocationMsg;
+		}
+
+		private List<ServiceLocation> GetShuffledServices([NotNull] DiscoverServicesRequest request)
 		{
 			List<ServiceLocation> allServices =
 				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
