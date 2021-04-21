@@ -52,5 +52,12 @@ namespace Quaestor.KeyValueStore
 				return hashCode;
 			}
 		}
+
+		public override string ToString()
+		{
+			string protocol = UseTls ? "https" : "http";
+
+			return $"{ServiceName} at {protocol}://{HostName}:{Port}";
+		}
 	}
 }

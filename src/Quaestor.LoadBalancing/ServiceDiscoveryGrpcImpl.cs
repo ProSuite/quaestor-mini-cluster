@@ -46,15 +46,15 @@ namespace Quaestor.LoadBalancing
 			{
 				response = new DiscoverServicesResponse();
 
-				IList<ServiceLocationMsg> serviceLocationMessages = LocateRandom(request);
+				IList<ServiceLocationMsg> serviceLocationMessages = GetRandomServiceLocationMessages(request);
 
 				response.ServiceLocations.AddRange(serviceLocationMessages);
 			}
 			catch (Exception e)
 			{
-				SetUnhealthy();
-
 				_logger.LogError(e, "Error discovering service {serviceName}", request.ServiceName);
+
+				SetUnhealthy();
 			}
 
 			return Task.FromResult(response);
@@ -76,6 +76,8 @@ namespace Quaestor.LoadBalancing
 			catch (Exception e)
 			{
 				_logger.LogError(e, "Error discovering service {serviceName}", request.ServiceName);
+
+				SetUnhealthy();
 			}
 
 			return response;
@@ -87,6 +89,7 @@ namespace Quaestor.LoadBalancing
 		/// </summary>
 		public string ServiceName => nameof(ServiceDiscoveryGrpc);
 
+		[CanBeNull]
 		public HealthServiceImpl Health { get; set; }
 
 		private void SetUnhealthy()
@@ -94,17 +97,30 @@ namespace Quaestor.LoadBalancing
 			Health?.SetStatus(ServiceName, HealthCheckResponse.Types.ServingStatus.NotServing);
 		}
 
-		private IList<ServiceLocationMsg> LocateRandom(
+		private IList<ServiceLocationMsg> GetRandomServiceLocationMessages(
 			[NotNull] DiscoverServicesRequest request)
 		{
-			IList<ServiceLocation> allServices =
-				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
-
-			// Shuffle first!
-			Shuffle(allServices);
+			List<ServiceLocation> allServices = GetShuffledServices(request);
 
 			IList<ServiceLocationMsg> result = ToServiceLocationMessages(
 				GetHealthyServiceLocations(allServices, request.MaxCount)).ToList();
+
+			return result;
+		}
+
+		private async Task<IList<ServiceLocationMsg>> GetTopServiceLocationMessages(
+			[NotNull] DiscoverServicesRequest request)
+		{
+			// Shuffle first because typically many will have rank 0 -> try not to return the same one for concurrent requests
+			List<ServiceLocation> allServices = GetShuffledServices(request);
+
+			IList<ServiceLocation> servicesByDesirability =
+				await GetServicesRankedByLoad(allServices, request.MaxCount);
+
+			int maxResultCount = request.MaxCount == 0 ? -1 : request.MaxCount;
+
+			IList<ServiceLocationMsg> result =
+				ToServiceLocationMessages(servicesByDesirability, maxResultCount).ToList();
 
 			return result;
 		}
@@ -132,18 +148,25 @@ namespace Quaestor.LoadBalancing
 
 		private bool IsServiceHealthy(ServiceLocation serviceLocation)
 		{
-			// TODO: Aggressive time-out!
+			ChannelBase channel = GetChannel(serviceLocation);
 
-			Health.HealthClient healthClient =
-				new Health.HealthClient(GetChannel(serviceLocation));
+			Health.HealthClient healthClient = new Health.HealthClient(channel);
 
-			HealthCheckResponse healthCheckResponse = healthClient.Check(new HealthCheckRequest()
-				{Service = serviceLocation.ServiceName});
+			bool serving = GrpcUtils.IsServing(healthClient, serviceLocation.ServiceName,
+				out StatusCode statusCode);
 
-			if (healthCheckResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving)
+			if (serving)
 			{
 				return true;
 			}
+
+			_logger.LogWarning(
+				"Service location {location} is unhealthy ({status}). It will be removed from the service registry!",
+				serviceLocation, statusCode);
+
+			// In case it is restarted (or only temporarily offline) the service will be re-registered by the cluster...
+			_serviceRegistry.EnsureRemoved(serviceLocation.ServiceName, serviceLocation.HostName,
+				serviceLocation.Port, serviceLocation.UseTls);
 
 			return false;
 		}
@@ -189,24 +212,24 @@ namespace Quaestor.LoadBalancing
 			}
 		}
 
-		private async Task<IList<ServiceLocationMsg>> GetTopServiceLocationMessages(
-			[NotNull] DiscoverServicesRequest request)
+
+
+		private List<ServiceLocation> GetShuffledServices(DiscoverServicesRequest request)
 		{
-			var allServices =
+			List<ServiceLocation> allServices =
 				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
 
-			// Shuffle first because typically many will have rank 0 -> try not to return the same one for concurrent requests
+			_logger.LogDebug("{count} {serviceName} service(s) found in service registry:",
+				allServices.Count, request.ServiceName);
+
 			Shuffle(allServices);
 
-			IList<ServiceLocation> servicesByDesirability =
-				await GetServicesRankedByLoad(allServices, request.MaxCount);
+			foreach (ServiceLocation serviceLocation in allServices)
+			{
+				_logger.LogDebug("  {serviceLocation}", serviceLocation);
+			}
 
-			int maxResultCount = request.MaxCount == 0 ? -1 : request.MaxCount;
-
-			IList<ServiceLocationMsg> result =
-				ToServiceLocationMessages(servicesByDesirability, maxResultCount).ToList();
-
-			return result;
+			return allServices;
 		}
 
 		private async Task<IList<ServiceLocation>> GetServicesRankedByLoad(

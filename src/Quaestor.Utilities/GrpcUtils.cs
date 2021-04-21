@@ -4,12 +4,16 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using Grpc.Core;
+using Grpc.Health.V1;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 
 namespace Quaestor.Utilities
 {
+	/// <summary>
+	///     Utility methods mostly copied from ProSuite.Microservices.Client. Could be in a shared package.
+	/// </summary>
 	public static class GrpcUtils
 	{
 		private static readonly ILogger _logger = Log.CreateLogger("GrpcUtils");
@@ -101,6 +105,47 @@ namespace Quaestor.Utilities
 			_logger.LogDebug("Using ephemeral port {port}", port);
 
 			return port;
+		}
+
+		/// <summary>
+		///     Determines whether the specified endpoint is connected to the specified service
+		///     that responds with health status 'Serving' .
+		/// </summary>
+		/// <param name="healthClient"></param>
+		/// <param name="serviceName"></param>
+		/// <param name="statusCode">Status code from the RPC call</param>
+		/// <returns></returns>
+		public static bool IsServing([NotNull] Health.HealthClient healthClient,
+		                             [NotNull] string serviceName,
+		                             out StatusCode statusCode)
+		{
+			statusCode = StatusCode.Unknown;
+
+			try
+			{
+				HealthCheckResponse healthResponse =
+					healthClient.Check(new HealthCheckRequest()
+						{Service = serviceName});
+
+				statusCode = StatusCode.OK;
+
+				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
+			}
+			catch (RpcException rpcException)
+			{
+				_logger.LogDebug(rpcException, "Error checking health of service {serviceName}",
+					serviceName);
+
+				statusCode = rpcException.StatusCode;
+			}
+			catch (Exception e)
+			{
+				_logger.LogDebug(e, "Error checking health of service {serviceName}", serviceName);
+
+				return false;
+			}
+
+			return false;
 		}
 	}
 }
