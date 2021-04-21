@@ -150,6 +150,10 @@ namespace Quaestor.MiniCluster
 				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs,
 					false, true, EnvironmentVariables);
 
+				// Very important. Otherwise the process hangs once the buffer is full.
+				Process.BeginOutputReadLine();
+				Process.BeginErrorReadLine();
+
 				// Configurable? Or don't even wait for the health check and only start it?
 				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(8);
 
