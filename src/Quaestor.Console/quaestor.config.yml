@@ -45,6 +45,7 @@ agents:
     clusterShutdownAction: Kill
     # The dictionary of key: value pairs that should be added as environment variables
     environmentVariables:
+      QUAESTOR_WORKER_EXIT_WHEN_UNHEALTHY: false
     # The host name to be used for health-checks and service discovery by the LoadBalancer
     hostName: localhost
     # Whether transport layer security (SSL/TLS) is used by the server.

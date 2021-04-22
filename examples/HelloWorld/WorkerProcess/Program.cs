@@ -13,6 +13,8 @@ namespace WorkerProcess
 	{
 		const string _serviceName = "Worker";
 
+		const string _exitWhenUnhealthyEnvVar = "QUAESTOR_WORKER_EXIT_WHEN_UNHEALTHY";
+
 		private static ServiceLoad Load { get; set; }
 
 		static async Task Main(string[] args)
@@ -112,6 +114,24 @@ namespace WorkerProcess
 
 			healthService.SetStatus(_serviceName,
 				HealthCheckResponse.Types.ServingStatus.NotServing);
+
+			bool exit = ExitWhenUnhealthy();
+
+			if (exit)
+			{
+				Environment.Exit(42);
+			}
+		}
+
+		private static bool ExitWhenUnhealthy()
+		{
+			string exitWhenUnhealthy =
+				Environment.GetEnvironmentVariable(_exitWhenUnhealthyEnvVar);
+
+			bool exit = !string.IsNullOrEmpty(exitWhenUnhealthy) &&
+			            exitWhenUnhealthy.Equals("TRUE",
+				            StringComparison.InvariantCultureIgnoreCase);
+			return exit;
 		}
 
 		private static void PrintUsage()
