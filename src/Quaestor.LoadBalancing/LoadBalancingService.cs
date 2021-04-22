@@ -26,6 +26,8 @@ namespace Quaestor.LoadBalancing
 
 		private Server _server;
 
+		private bool _keyValueStoreIsLocal;
+
 		public LoadBalancingService(IConfiguration configuration)
 		{
 			KnownAgents.Configure(configuration);
@@ -93,6 +95,8 @@ namespace Quaestor.LoadBalancing
 
 				keyValueStore = new LocalKeyValueStore();
 
+				_keyValueStoreIsLocal = true;
+
 				serviceAgents.AddRange(KnownAgents.Get(WellKnownAgentType.Worker));
 			}
 
@@ -109,15 +113,18 @@ namespace Quaestor.LoadBalancing
 			return serviceRegistry;
 		}
 
-		private static Server StartLoadBalancerService([NotNull] ServiceRegistry serviceRegistry,
-		                                               [NotNull] ServerConfig serverConfig)
+		private Server StartLoadBalancerService([NotNull] ServiceRegistry serviceRegistry,
+		                                        [NotNull] ServerConfig serverConfig)
 		{
 			ServerCredentials serverCredentials =
 				GrpcServerUtils.GetServerCredentials(serverConfig.Certificate,
 					serverConfig.PrivateKeyFile,
 					serverConfig.EnforceMutualTls);
 
-			var serviceDiscoveryGrpcImpl = new ServiceDiscoveryGrpcImpl(serviceRegistry);
+			var serviceDiscoveryGrpcImpl = new ServiceDiscoveryGrpcImpl(serviceRegistry)
+			{
+				RemoveUnhealthyServices = !_keyValueStoreIsLocal
+			};
 
 			var health = new HealthServiceImpl();
 

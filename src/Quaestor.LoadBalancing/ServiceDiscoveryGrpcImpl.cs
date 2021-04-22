@@ -101,7 +101,16 @@ namespace Quaestor.LoadBalancing
 		/// </summary>
 		public string ServiceName => nameof(ServiceDiscoveryGrpc);
 
-		[CanBeNull] public HealthServiceImpl Health { get; set; }
+		/// <summary>
+		///     The health check service to be updated in case this service becomes unhealthy.
+		/// </summary>
+		[CanBeNull]
+		public HealthServiceImpl Health { get; set; }
+
+		/// <summary>
+		///     Whether unhealthy worker services should be removed from the service registry.
+		/// </summary>
+		public bool RemoveUnhealthyServices { get; set; }
 
 		private void SetUnhealthy()
 		{
@@ -176,8 +185,12 @@ namespace Quaestor.LoadBalancing
 				serviceLocation, statusCode);
 
 			// In case it is restarted (or only temporarily offline) the service will be re-registered by the cluster...
-			_serviceRegistry.EnsureRemoved(serviceLocation.ServiceName, serviceLocation.HostName,
-				serviceLocation.Port, serviceLocation.UseTls);
+			// But only if the service registry is in a global key-value store!
+			if (RemoveUnhealthyServices)
+			{
+				_serviceRegistry.EnsureRemoved(serviceLocation.ServiceName,
+					serviceLocation.HostName, serviceLocation.Port, serviceLocation.UseTls);
+			}
 
 			return false;
 		}
