@@ -2,7 +2,7 @@
 # This file will be searched in the directory provided by the --configDir command line option
 # If --configDir is not specified it is expected in the current directory.
 #
-# Configuration of the service discovery / load balancer service
+# Configuration for service discovery / load balancer mode
 # This section is relevant if quaestor is started with the 'load-balancer' option
 serverConfig:
   hostName: localhost
@@ -14,7 +14,8 @@ serverConfig:
 # Configuration of the cluster management
 # # This section is relevant if quaestor is started with the 'cluster' option
 clusterConfig:
-  name: example
+  # The cluster name (global scope, primarily for display purposes).
+  name: example_cluster
   # The heart beat interval in seconds.
   heartBeatIntervalSeconds: 30
   # The time-out for the health check performed on each agent during the heart beat
@@ -37,7 +38,7 @@ agents:
     executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
     # The command line arguments. {HostName} and {Port} will be replaced by the respective values 
     # defined below.
-    commandLineArguments: "{Port} 75"
+    commandLineArguments: "{Port} 100"
     # The number of processes to be started. Typically the port list
     processCount: 4
     # Currently valid shutdown actions: {None, Kill}
@@ -45,7 +46,7 @@ agents:
     # The dictionary of key: value pairs that should be added as environment variables
     environmentVariables:
     # The host name to be used for health-checks and service discovery by the LoadBalancer
-    hostName: 127.0.0.1
+    hostName: localhost
     # Whether transport layer security (SSL/TLS) is used by the server.
     useTLS: false
     # The list of ports (must correspond with the processCount from above). If empty, ephemeral
@@ -71,22 +72,22 @@ agents:
     serviceNames:
     - ServiceDiscoveryGrpc
 
-  # Example for a distributed keyvalue store to be used by the service discovery. Remove
-  # this section to use a local in-memory key-value store containing just the Worker agents.
-  KeyValueStore:
-    # Executable: https://github.com/etcd-io/etcd/releases/ (make sure it is in the path environment variable)
-    executablePath: etcd.exe
-    # It works without arguments but TLS is recommended. Example with auto-generated pem files: 
-    # --name cluster_test --data-dir C:\bin\etcd\data\topgis_qa.etcd --auto-tls --advertise-client-urls=https://127.0.0.1:2379 --listen-client-urls=https://127.0.0.1:2379
-    commandLineArguments:
-    processCount: 1
-    # Leave it running
-    clusterShutdownAction: None
-    hostName: 127.0.0.1
-    useTLS: false
-    # The official etcd default port for client requests is 2379
-    ports:
-    - 2379
-    # Etcd's health check implementation does not respond for specific service names, but it
-    # supports health check requests with empty service names.
-    serviceNames: []
+#  # Example for a distributed keyvalue store to be used by the service discovery. Remove
+#  # this section to use a local in-memory key-value store containing just the Worker agents.
+#  KeyValueStore:
+#    # Executable: https://github.com/etcd-io/etcd/releases/ (make sure it is in the path environment variable)
+#    executablePath: etcd.exe
+#    # It works without arguments but TLS is recommended. Example with auto-generated pem files: 
+#    # --name cluster_test --data-dir C:\bin\etcd\data\topgis_qa.etcd --auto-tls --advertise-client-urls=https://127.0.0.1:2379 --listen-client-urls=https://127.0.0.1:2379
+#    commandLineArguments:
+#    processCount: 1
+#    # Leave it running
+#    clusterShutdownAction: None
+#    hostName: 127.0.0.1
+#    useTLS: false
+#    # The official etcd default port for client requests is 2379
+#    ports:
+#    - 2379
+#    # Etcd's health check implementation does not respond for specific service names, but it
+#    # supports health check requests with empty service names.
+#    serviceNames: []

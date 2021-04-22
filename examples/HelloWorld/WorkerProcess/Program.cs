@@ -13,50 +13,40 @@ namespace WorkerProcess
 	{
 		const string _serviceName = "Worker";
 
+		private static ServiceLoad Load { get; set; }
+
 		static async Task Main(string[] args)
 		{
-			if (args.Length < 1)
+			if (!TryGetArguments(args, out int port, out int secondsUntilUnhealthy))
 			{
-				Console.WriteLine("Too few arguments.");
-				PrintUsage();
 				return;
 			}
 
-			if (!int.TryParse(args[0], out var port))
-			{
-				Console.WriteLine($"Invalid port: {port}.");
-				PrintUsage();
-				return;
-			}
-
-			int seconds = -1;
-			if (args.Length > 1)
-			{
-				if (!int.TryParse(args[1], out seconds))
-
-				{
-					Console.WriteLine($"Invalid number of seconds: {seconds}.");
-					PrintUsage();
-					return;
-				}
-			}
-
+			// The health service every serious grpc server has:
 			var healthService = new HealthServiceImpl();
 			healthService.SetStatus(_serviceName, HealthCheckResponse.Types.ServingStatus.Serving);
 
+			// The load reporting service required for Quaestor load-balancer:
 			LoadReportingGrpcImpl loadReporter = new LoadReportingGrpcImpl();
-			loadReporter.AllowMonitoring("Worker", new ServiceLoad
+
+			// Use Load.StartRequest(); at the beginning
+			// and Load.StartRequest(); at the end of a request
+			// or assign a known load rate using Load.KnownLoadRate
+			Load = new ServiceLoad
 			{
 				ProcessCapacity = 1,
 				CurrentProcessCount = 0,
 				ServerUtilization = 0.12345
-			});
+			};
+
+			loadReporter.AllowMonitoring("Worker", Load);
 
 			var server =
 				new Server
 				{
 					Services =
 					{
+						// YourGrpc.BindService(yourActualServiceImpl),
 						Health.BindService(healthService),
 						LoadReportingGrpc.BindService(loadReporter)
 					},
@@ -68,13 +58,48 @@ namespace WorkerProcess
 
 			server.Start();
 
-			if (seconds > 0)
+			if (secondsUntilUnhealthy > 0)
 			{
-				await SetUnhealthyAfter(seconds, healthService);
+				await SetUnhealthyAfter(secondsUntilUnhealthy, healthService);
 			}
 
 			Console.WriteLine("Press any key to finish.");
 			Console.ReadKey(true);
+		}
+
+		private static bool TryGetArguments(string[] args,
+		                                    out int port,
+		                                    out int secondsUntilUnhealthy)
+		{
+			port = -1;
+			secondsUntilUnhealthy = -1;
+
+			if (args.Length < 1)
+			{
+				Console.WriteLine("Too few arguments.");
+				PrintUsage();
+				return false;
+			}
+
+			if (!int.TryParse(args[0], out port))
+			{
+				Console.WriteLine($"Invalid port: {port}.");
+				PrintUsage();
+				return false;
+			}
+
+			if (args.Length > 1)
+			{
+				if (!int.TryParse(args[1], out secondsUntilUnhealthy))
+
+				{
+					Console.WriteLine($"Invalid number of seconds: {secondsUntilUnhealthy}.");
+					PrintUsage();
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		private static async Task SetUnhealthyAfter(int seconds, HealthServiceImpl healthService)
