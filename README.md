@@ -98,9 +98,12 @@ In practice, this could look like this (from the WorkerProcess in the HelloWorld
 
 ## Bootstrapping using a Windows service
 
-On Windows, the cluster process could be started by a windows service to make sure it is always running. To do so, open an elevated command prompt and run
+On Windows, the cluster process could be started by a windows service to make sure it is always running.
 ```sh
-# Make sure to replace the bin path and the --configDir directory first.
+# Adapt the quaestor.config.yml: Only use absolute paths that can be accessed by the local system account.
+# Adapt the logging configuration to contain no relative path or Userprofile environment var.
+# Open an elevated command prompt.
+# Replace the bin path and the --configDir directory in the following statement.
 $ sc create "QuaestorMiniCluster" binPath= "C:\data\git\quaestor-mini-cluster\build\output\Quaestor_0.0.6\quaestor.exe cluster --configDir C:\data\git\quaestor-mini-cluster\build\output\Quaestor_0.0.6" DisplayName= "Quaestor Mini Cluster"
 ```
 
