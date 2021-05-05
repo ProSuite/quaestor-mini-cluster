@@ -33,11 +33,14 @@ namespace Quaestor.KeyValueStore
 					updated ? "Updated {key} in kv store" : "Could not update {key} in kv store",
 					key);
 			}
+			else
+			{
+				bool added = _dictionary.TryAdd(key, value);
 
-			bool added = _dictionary.TryAdd(key, value);
-
-			_logger.LogDebug(added ? "Added {key} to kv store" : "Could not add {key} to kv store",
-				key);
+				_logger.LogDebug(
+					added ? "Added {key} to kv store" : "Could not add {key} to kv store",
+					key);
+			}
 		}
 
 		public string GetValue(string key)
