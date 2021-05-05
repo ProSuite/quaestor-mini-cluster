@@ -3,7 +3,16 @@ Manages a (local) cluster of processes that are hosting GRPC services. Built for
 
 ## Basic Functionality
 
-Configure a set of processes to be managed by the mini cluster. During a heart beat each process is evaluated to ensure it is running and healthy (serving) using the [GRPC health checking protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md). Otherwise the process is re-started.
+The mini cluster and the load balancer can be used separately but in practice they are more useful if combined.
+
+The **mini cluster** uses a configured set of processes to be observed and kept alive. During a heart beat each process is evaluated to ensure it is running and healthy (serving) using the [GRPC health checking protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If a process is unhealthy or does not respond the process is re-started.
+
+The **load balancer** is a [grpc service](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.ServiceDiscovery/service_discovery.proto) that can be used to discover services from a local service registry (i.e. the quaestor.config.yml file) or from [Etcd](https://etcd.io/), a distributed key-value store. The latter allows to discover and balance services from remote, independent clusters and is highly recommended.
+
+In order to use the look-aside load balancer the involved services 
+
+- Must report service health using the [GRPC health checking protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md)
+- Must [report service load](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.LoadReporting/load_reporting.proto) as defined in the Quaestor.LoadReporting assembly (see build directory to build the nuget package).
 
 ## Getting Started
 
@@ -17,7 +26,7 @@ $ cd quaestor-mini-cluster
 $ dotnet build Quaestor.MiniCluster.sln
 ```
 
-### Hello World
+### Mini Cluster: Hello World
 
 Once the solution has been built, a simple [example cluster](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/examples/HelloWorld/HelloWorld/Program.cs) can be started looking after just one worker process. The example [worker process](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/examples/HelloWorld/WorkerProcess/Program.cs) has 2 arguments: the port at which it shall be serving and optionally the number of seconds after which it will report unhealthy.
 
@@ -28,39 +37,30 @@ $ dotnet run --project .\examples\HelloWorld\HelloWorld\HelloWorld.csproj
 
 By default the cluster heartbeats every 30 seconds and checks if the process responds and is still healthy. The sample worker process starts reporting as unhealthy after 100 seconds and will then be restarted by quaestor.
 
-Now it's time to check out the Quaestor command line and configuration:
+### Command Line Example
+
+Start the quaestor executable in cluster mode:
 
 ```sh
 # Start Quaestor in cluster mode:
 $ cd .\src\Quaestor.Console\bin\Debug\net5.0
 $ quaestor cluster
 ```
-This starts 4 worker processes and one load balancer process as configured in [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml).
+This starts 4 worker processes and one load balancer process as configured in [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml). An alternative directory containing the configuration can be specified on the command line (use quaestor cluster --help for details).
 
-The load balancer service can be tested with the following gRPCurl script (first download [gRPCurl](https://github.com/fullstorydev/grpcurl/releases) and make sure it is in the PATH environment variable):
-```sh
-# Start a powershell and cd to the quaestor-mini-cluster repository. Then:
-$ cd examples
-# All available service locations:
-$ .\DiscoverServices.ps1 localhost:5150 Worker
-# The service location with the lowest current load:
-.\DiscoverTopService.ps1 localhost:5150 Worker
-```
+This example also includes a basic load balancer implementation which can be tested using [external monitoring with gRPCurl](### External monitoring with gRPCurl).
 
 Stop the cluster (and shutdown the processes) with CTRL+C.
 
 ## Load Balancing
 
-The load balancer is a [grpc service](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.ServiceDiscovery/service_discovery.proto) that can be used to discover services from a local service registry (i.e. the quaestor.config.yml file) or from [Etcd](https://etcd.io/), a distributed key-value store. The latter allows to discover and balance services from remote, independent clusters and is highly recommended.
+### Requirements for balanced GRPC services
 
-In order to use the look-aside load balancer the involved services 
+In order for the load balancer to assess the availability and suitability of an individual service end point, the GPRC servers must implement both the GRPC health check protocol and perform load reporting as shown below:
 
-- Must report service health using the GRPC health checking protocol
-- Must [report service load](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.LoadReporting/load_reporting.proto) as defined in the Quaestor.LoadReporting assembly (see build directory to build the nuget package).
+From the [WorkerProcess](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/examples/HelloWorld/WorkerProcess/Program.cs) in the HelloWorld example:
 
-In practice, this could look like this (from the WorkerProcess in the HelloWorld example):
-
-			// The health service every serious grpc server should have:
+			// The grpc health service every serious grpc server should use:
 			var healthService = new HealthServiceImpl();
 			healthService.SetStatus(_serviceName, HealthCheckResponse.Types.ServingStatus.Serving);
 	
@@ -95,6 +95,31 @@ In practice, this could look like this (from the WorkerProcess in the HelloWorld
 				};
 	
 			server.Start();
+
+### Load Balancer Command Line
+
+The load balancer can be used independently from the cluster manager. The relevant section in the [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml) is right at the beginning.
+
+```sh
+# Start Quaestor in load balancer mode:
+$ cd .\src\Quaestor.Console\bin\Debug\net5.0
+$ quaestor load-balancer
+```
+
+### External monitoring with gRPCurl
+
+The load balancer service that is part of this cluster configuration can be tested with the following gRPCurl script (first download [gRPCurl](https://github.com/fullstorydev/grpcurl/releases) and make sure it is in the PATH environment variable):
+```sh
+# For this example make sure the quaestor has been started in cluster mode:
+$ cd .\src\Quaestor.Console\bin\Debug\net5.0
+$ quaestor cluster
+# Start a new powershell and cd to the quaestor-mini-cluster repository. Then:
+$ cd examples
+# All available service locations:
+$ .\DiscoverServices.ps1 localhost:5150 Worker
+# The service location with the lowest current load:
+.\DiscoverTopService.ps1 localhost:5150 Worker
+```
 
 ## Bootstrapping using a Windows service
 
