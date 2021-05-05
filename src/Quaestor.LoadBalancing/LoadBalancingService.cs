@@ -203,11 +203,9 @@ namespace Quaestor.LoadBalancing
 
 		private static async Task<IKeyValueStore> TryGetEtcdKeyValueStore()
 		{
-			IKeyValueStore keyValueStore;
-
 			foreach (var kvsAgent in KnownAgents.Get(WellKnownAgentType.KeyValueStore))
 			{
-				keyValueStore = await EtcdKeyValueStore.TryConnectAsync(kvsAgent);
+				IKeyValueStore keyValueStore = await EtcdKeyValueStore.TryConnectAsync(kvsAgent);
 
 				if (keyValueStore != null)
 				{
@@ -215,10 +213,9 @@ namespace Quaestor.LoadBalancing
 				}
 			}
 
-			// Try default (localhost, standard port) connection string:
-			keyValueStore = await EtcdKeyValueStore.TryConnectAsync();
+			// Do not just try the default address - Etcd might be running with a different purpose
 
-			return keyValueStore;
+			return null;
 		}
 	}
 }
