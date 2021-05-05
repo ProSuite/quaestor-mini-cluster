@@ -6,4 +6,7 @@ $outputDir = ".\output\Quaestor_" + $version
 
 dotnet publish "..\src\Quaestor.Console\Quaestor.Console.csproj" --runtime win-x64 -c Release --self-contained --output $outputDir
 
+Copy-Item ..\LICENSE -Destination .\output
+Copy-Item ..\README.md -Destination .\output
+
 pause
