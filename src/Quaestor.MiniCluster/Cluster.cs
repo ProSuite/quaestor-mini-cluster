@@ -68,6 +68,7 @@ namespace Quaestor.MiniCluster
 
 			CheckRunningProcesses();
 
+			_logger.LogInformation("Initializing service registry...");
 			// Ensure KVS is running, if configured!
 			IKeyValueStore keyValueStore = await InitializeKeyValueStoreAsync(Members, _heartbeat);
 
@@ -78,7 +79,7 @@ namespace Quaestor.MiniCluster
 			return true;
 		}
 
-		private static async Task<IKeyValueStore> InitializeKeyValueStoreAsync(
+		private async Task<IKeyValueStore> InitializeKeyValueStoreAsync(
 			[NotNull] IEnumerable<IManagedProcess> managedProcesses,
 			[NotNull] ClusterHeartBeat heartbeat)
 		{
@@ -103,12 +104,14 @@ namespace Quaestor.MiniCluster
 
 					if (keyValueStore != null)
 					{
+						_logger.LogInformation("Using etcd based key-value store...");
 						return keyValueStore;
 					}
 				}
 			}
 
 			// None is configured or none is running or none is responding:
+			_logger.LogInformation("Using in-memory key-value store...");
 			return new LocalKeyValueStore();
 		}
 
