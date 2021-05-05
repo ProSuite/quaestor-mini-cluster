@@ -2,16 +2,37 @@
 # This file will be searched in the directory provided by the --configDir command line option
 # If --configDir is not specified it is expected in the current directory.
 #
+# --------------------------------------------------------
 # Configuration for service discovery / load balancer mode
 # This section is relevant if quaestor is started with the 'load-balancer' option
 serverConfig:
+
+  # The host name. Note that in case TLS is used (i.e. a certificate is specified) this must be
+  # identical to the certificate's subject alternative name.
   hostName: localhost
+
+  # The port.
   port: 5150
+  
+  # The server certificate to be used for transport security (SSL/TLS). Specify the server certificate 
+  # subject or thumbprint from the certificate store (Local Computer). Note that the certificate's 
+  # private key must be accessible to this executable, unless the --key parameter is also specified. 
+  # Alternatively this can be a PEM file containing the certificate chain (including the root 
+  # certificate shared with the client).
+  # Troubleshooting: If the specified thumbprint of the form 021f85bc637e33df8d8b1583ea2058e92c73335d
+  # cannot be found the process probably must be run with elevated privileges. This is necessary to
+  # extract the private key from the certificate file.
   certificate:
+  
+  # The private key PEM file (to remain on the server). If not specified and the certificate found in 
+  # the store has a private exportable key the private key will be extracted from the certificate.
   privateKeyFile:
+
+  # Enforce mutual authentication for transport layer security (SSL/TLS).
   enforceMutualTls: false
 
-# Configuration of the cluster management
+# --------------------------------------------------------
+# Configuration section for the cluster management mode.
 # # This section is relevant if quaestor is started with the 'cluster' option
 clusterConfig:
   # The cluster name (global scope, primarily for display purposes).
