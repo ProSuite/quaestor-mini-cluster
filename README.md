@@ -118,7 +118,11 @@ $ cd examples
 # All available service locations:
 $ .\DiscoverServices.ps1 localhost:5150 Worker
 # The service location with the lowest current load:
-.\DiscoverTopService.ps1 localhost:5150 Worker
+$ .\DiscoverTopService.ps1 localhost:5150 Worker
+# gRPC health check for the first worker service:
+$ .\CheckHealth.ps1 localhost:5161 Worker
+# gRPC health check for the load balancer service using the configured service name:
+$ .\CheckHealth.ps1 localhost:5150 ServiceDiscoveryGrpc
 ```
 
 ## Bootstrapping using a Windows service
