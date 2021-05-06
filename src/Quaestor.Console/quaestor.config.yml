@@ -5,6 +5,10 @@
 # --------------------------------------------------------
 # Configuration for service discovery / load balancer mode
 # This section is relevant if quaestor is started with the 'load-balancer' option
+# However, the key-value store used by the service registry is determined by the cluster 
+# configuration below:
+# - An etcd based, distributed key-value store is used if an agent of type KeyValueStore is defined.
+# - Alternatively, a process-local, in-memory key-value store is configured using all Worker agents.
 serverConfig:
 
   # The host name. Note that in case TLS is used (i.e. a certificate is specified) this must be
@@ -94,16 +98,17 @@ agents:
     serviceNames:
     - ServiceDiscoveryGrpc
 
-#  # Example for a distributed keyvalue store to be used by the service discovery. Remove
-#  # this section to use a local in-memory key-value store containing just the Worker agents.
+#  # Example for an etcd-based, distributed keyvalue store to be used by the service discovery. 
+#  # Remove this section to use a local in-memory key-value store containing just the Worker agents.
 #  KeyValueStore:
-#    # Executable: https://github.com/etcd-io/etcd/releases/ (make sure it is in the path environment variable)
+#    # Executable: https://github.com/etcd-io/etcd/releases/ (v. 3.4 or higher, add the install dir
+#    # to the path environment variable or define the fully qualified location)
 #    executablePath: etcd.exe
-#    # It works without arguments but TLS is recommended. Example with auto-generated pem files: 
-#    # --name cluster_test --data-dir C:\bin\etcd\data\topgis_qa.etcd --auto-tls --advertise-client-urls=https://127.0.0.1:2379 --listen-client-urls=https://127.0.0.1:2379
+#    # see https://github.com/etcd-io/etcd/blob/release-3.4/etcd.conf.yml.sample
+#    # --config-file C:\data\git\quaestor-mini-cluster\build\output\etcd_conf.yml
 #    commandLineArguments:
 #    processCount: 1
-#    # Leave it running
+#    # Leave it running, other nodes might rely on it
 #    clusterShutdownAction: None
 #    hostName: 127.0.0.1
 #    useTLS: false
@@ -111,5 +116,5 @@ agents:
 #    ports:
 #    - 2379
 #    # Etcd's health check implementation does not respond for specific service names, but it
-#    # supports health check requests with empty service names.
+#    # supports health check requests with empty service names:
 #    serviceNames: []
