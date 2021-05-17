@@ -39,14 +39,14 @@ namespace Quaestor.Console
 				return 1;
 			}
 
-			ConfigureLogging();
-
-			LogApplicationStart(args);
-
-			using IHost host = CreateHostBuilder(args).Build();
-
 			try
 			{
+				ConfigureLogging();
+
+				LogApplicationStart(args);
+
+				using IHost host = CreateHostBuilder(args).Build();
+
 				await host.RunAsync();
 			}
 			catch (Exception e)
@@ -105,7 +105,7 @@ namespace Quaestor.Console
 							env.EnvironmentName);
 
 						_logger.LogInformation("Configuration path: {rootPath}",
-							env.ContentRootPath);
+							string.IsNullOrEmpty(_configDir) ? env.ContentRootPath : _configDir);
 
 						string defaultConfig = Path.Combine(_configDir, "quaestor.config.yml");
 						string envSpecificConfig = Path.Combine(_configDir,
