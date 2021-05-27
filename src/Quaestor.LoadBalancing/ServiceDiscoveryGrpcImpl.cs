@@ -219,7 +219,7 @@ namespace Quaestor.LoadBalancing
 
 			foreach (ServiceLocation serviceLocation in serviceLocations)
 			{
-				if (maxCount > 0 && resultCount++ >= maxCount)
+				if (maxCount > 0 && resultCount >= maxCount)
 				{
 					yield break;
 				}
@@ -227,6 +227,8 @@ namespace Quaestor.LoadBalancing
 				ServiceLocationMsg serviceLocationMsg = ToServiceLocationMsg(serviceLocation);
 
 				yield return serviceLocationMsg;
+
+				resultCount++;
 			}
 		}
 
