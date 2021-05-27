@@ -287,6 +287,10 @@ namespace Quaestor.LoadBalancing
 
 				if (!IsServiceHealthy(serviceLocation))
 				{
+					_logger.LogDebug(
+						"Service location {serviceLocation} is unhealthy and will not be used.",
+						serviceLocation);
+
 					continue;
 				}
 
@@ -294,6 +298,10 @@ namespace Quaestor.LoadBalancing
 
 				if (desirability < 0)
 				{
+					_logger.LogDebug(
+						"Service location {serviceLocation} is not desirable and will not be used.",
+						serviceLocation);
+
 					continue;
 				}
 
@@ -338,17 +346,33 @@ namespace Quaestor.LoadBalancing
 				return loadReportResponse.KnownLoadRate;
 			}
 
+			double cpuUsage = loadReportResponse.ServerStats.ServerUtilization;
+			int currentRequestCount = loadReportResponse.ServerStats.CurrentRequests;
+
 			int capacity = loadReportResponse.ServerStats.RequestCapacity;
+
+			if (capacity < 0)
+			{
+				_logger.LogDebug(
+					"Service location {serviceLocation} reports capacity -1 (ignore). The request count will be used.",
+					serviceLocation);
+
+				// Ignore capacity, just return the workload
+				return cpuUsage > 0
+					? currentRequestCount * cpuUsage
+					: currentRequestCount;
+			}
 
 			if (capacity == 0)
 			{
+				_logger.LogDebug(
+					"Service location {serviceLocation} reports capacity 0 (do not use) and will not be used.",
+					serviceLocation);
+
 				return -1;
 			}
 
-			double workload = (double) loadReportResponse.ServerStats.CurrentRequests /
-			                  capacity;
-
-			double cpuUsage = loadReportResponse.ServerStats.ServerUtilization;
+			double workload = (double) currentRequestCount / capacity;
 
 			var desirability = cpuUsage > 0 ? workload * cpuUsage : workload;
 
