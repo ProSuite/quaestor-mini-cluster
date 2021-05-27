@@ -369,6 +369,8 @@ namespace Quaestor.MiniCluster
 			{
 				if (process != null && !process.HasExited)
 				{
+					_logger.LogDebug("Killing {process}...)", this);
+
 					process.Kill();
 				}
 			}
