@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace Quaestor.Utilities
@@ -75,11 +76,13 @@ namespace Quaestor.Utilities
 			return process;
 		}
 
-		public static int RunningProcessesCount(string processName)
+		public static int RunningProcessesCount(string processName, int exceptProcessId)
 		{
-			Process[] runningImagePreparations = Process.GetProcessesByName(processName);
+			Process[] processes = Process.GetProcessesByName(processName);
 
-			return runningImagePreparations.Length;
+			return exceptProcessId >= 0
+				? processes.AsEnumerable().Count(p => p.Id != exceptProcessId)
+				: processes.Length;
 		}
 	}
 }

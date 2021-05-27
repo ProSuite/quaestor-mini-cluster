@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -242,7 +243,10 @@ namespace Quaestor.MiniCluster
 		{
 			foreach (var processName in Members.Select(m => m.ProcessName).Distinct())
 			{
-				var processesCount = ProcessUtils.RunningProcessesCount(processName);
+				int currentProcessId = Process.GetCurrentProcess().Id;
+
+				int processesCount =
+					ProcessUtils.RunningProcessesCount(processName, currentProcessId);
 
 				if (processesCount > 0)
 				{
