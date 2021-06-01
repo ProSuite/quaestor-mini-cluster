@@ -122,8 +122,8 @@ namespace Quaestor.Utilities
 						$"Private key PEM file {privateKeyFilePath} was not found.");
 				}
 
-				result = new KeyPair(File.ReadAllText(certificate),
-					File.ReadAllText(privateKeyFilePath));
+				result = new KeyPair(File.ReadAllText(privateKeyFilePath),
+					File.ReadAllText(certificate));
 
 				_logger.LogInformation("Using certificate from file {cert}", certificate);
 			}
