@@ -6,6 +6,7 @@ using Etcdserverpb;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
+using Quaestor.Utilities;
 
 namespace Quaestor.KeyValueStore
 {
@@ -25,15 +26,18 @@ namespace Quaestor.KeyValueStore
 		///     The connection string in the form
 		///     http://localhost:2379 or https://hostname.example.com:8080
 		/// </param>
+		/// <param name="caCert"></param>
 		/// <returns></returns>
 		[ItemCanBeNull]
 		public static async Task<EtcdKeyValueStore> TryConnectAsync(
-			string connectionString = "http://localhost:2379")
+			string connectionString = "http://localhost:2379",
+			string caCert = "")
 		{
 			_logger.LogDebug("Trying to connect to distributed key-value store at {conn}...",
 				connectionString);
 
-			EtcdClient etcdClient = new EtcdClient(connectionString);
+			int defaultPort = 2379;
+			EtcdClient etcdClient = new EtcdClient(connectionString, defaultPort, caCert);
 
 			var etcdStore = new EtcdKeyValueStore(etcdClient);
 
@@ -59,7 +63,10 @@ namespace Quaestor.KeyValueStore
 
 			string etcdConnection = $"{protocol}://{hostName}:{port}";
 
-			var keyValueStore = await TryConnectAsync(etcdConnection);
+			string rootCertificatesAsPem =
+				useTLS ? CertificateUtils.GetUserRootCertificatesInPemFormat() : string.Empty;
+
+			var keyValueStore = await TryConnectAsync(etcdConnection, rootCertificatesAsPem);
 
 			return keyValueStore;
 		}

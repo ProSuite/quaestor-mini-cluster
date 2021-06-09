@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Quaestor.Environment\Quaestor.Environment.csproj" />
+    <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />
   </ItemGroup>
 
 </Project>
