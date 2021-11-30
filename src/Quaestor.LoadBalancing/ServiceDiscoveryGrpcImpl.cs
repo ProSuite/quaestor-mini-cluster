@@ -277,6 +277,8 @@ namespace Quaestor.LoadBalancing
 
 			var freeList = new List<ServiceLocation>();
 
+			int failureCount = 0;
+			Exception lastException = null;
 			foreach (var serviceLocation in serviceLocations)
 			{
 				if (freeList.Count >= maxCount)
@@ -285,35 +287,59 @@ namespace Quaestor.LoadBalancing
 					return freeList;
 				}
 
-				if (!IsServiceHealthy(serviceLocation))
+				try
 				{
-					_logger.LogDebug(
-						"Service location {serviceLocation} is unhealthy and will not be used.",
+					if (!IsServiceHealthy(serviceLocation))
+					{
+						_logger.LogDebug(
+							"Service location {serviceLocation} is unhealthy and will not be used.",
+							serviceLocation);
+
+						continue;
+					}
+
+					double desirability = await GetServiceRank(serviceLocation);
+
+					if (desirability < 0)
+					{
+						_logger.LogDebug(
+							"Service location {serviceLocation} is not desirable and will not be used.",
+							serviceLocation);
+
+						continue;
+					}
+
+					if (desirability == 0)
+					{
+						freeList.Add(serviceLocation);
+					}
+
+					servicesByDesirability.Add(serviceLocation, desirability);
+				}
+				catch (Exception e)
+				{
+					_logger.LogWarning(e, "Error checking service health for {serviceLocation}",
 						serviceLocation);
 
-					continue;
+					failureCount++;
+
+					lastException = e;
 				}
-
-				double desirability = await GetServiceRank(serviceLocation);
-
-				if (desirability < 0)
-				{
-					_logger.LogDebug(
-						"Service location {serviceLocation} is not desirable and will not be used.",
-						serviceLocation);
-
-					continue;
-				}
-
-				if (desirability == 0)
-				{
-					freeList.Add(serviceLocation);
-				}
-
-				servicesByDesirability.Add(serviceLocation, desirability);
 			}
 
-			return servicesByDesirability.Keys.OrderBy(sl => servicesByDesirability[sl]).ToList();
+			var result = servicesByDesirability.Keys.OrderBy(sl => servicesByDesirability[sl])
+				.ToList();
+
+			if (result.Count == 0 && failureCount > 0 && lastException != null)
+			{
+				// Something more serious might be wrong and we cannot serve even one location
+				_logger.LogWarning(
+					"No service can be served AND {failureCount} exceptions occurred! Throwing last exception...");
+
+				throw lastException;
+			}
+
+			return result;
 		}
 
 		/// <summary>
