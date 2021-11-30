@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -21,8 +22,8 @@ namespace Quaestor.LoadBalancing
 		private readonly ServiceRegistry _serviceRegistry;
 		[CanBeNull] private readonly string _clientCertificate;
 
-		private readonly IDictionary<ServiceLocation, Channel> _channels =
-			new Dictionary<ServiceLocation, Channel>();
+		private readonly ConcurrentDictionary<ServiceLocation, Channel> _channels =
+			new ConcurrentDictionary<ServiceLocation, Channel>();
 
 		private static readonly Random _random = new Random();
 
@@ -205,7 +206,11 @@ namespace Quaestor.LoadBalancing
 				channel = GrpcUtils.CreateChannel(serviceLocation.HostName, serviceLocation.Port,
 					channelCredentials);
 
-				_channels.Add(serviceLocation, channel);
+				if (!_channels.TryAdd(serviceLocation, channel))
+				{
+					// It's been added in the meanwhile by another request on another thread
+					channel = _channels[serviceLocation];
+				}
 			}
 
 			return channel;
