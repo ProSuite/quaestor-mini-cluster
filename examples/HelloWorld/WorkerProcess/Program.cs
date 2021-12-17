@@ -19,7 +19,8 @@ namespace WorkerProcess
 
 		static async Task Main(string[] args)
 		{
-			if (!TryGetArguments(args, out int port, out int secondsUntilUnhealthy))
+			if (!TryGetArguments(args, out int port, out int secondsUntilUnhealthy,
+				    out int currentRequests))
 			{
 				return;
 			}
@@ -37,7 +38,7 @@ namespace WorkerProcess
 			Load = new ServiceLoad
 			{
 				ProcessCapacity = 1,
-				CurrentProcessCount = 0,
+				CurrentProcessCount = currentRequests,
 				ServerUtilization = 0.12345
 			};
 
@@ -71,10 +72,12 @@ namespace WorkerProcess
 
 		private static bool TryGetArguments(string[] args,
 		                                    out int port,
-		                                    out int secondsUntilUnhealthy)
+		                                    out int secondsUntilUnhealthy,
+		                                    out int currentRequestsCount)
 		{
 			port = -1;
 			secondsUntilUnhealthy = -1;
+			currentRequestsCount = 0;
 
 			if (args.Length < 1)
 			{
@@ -95,7 +98,18 @@ namespace WorkerProcess
 				if (!int.TryParse(args[1], out secondsUntilUnhealthy))
 
 				{
-					Console.WriteLine($"Invalid number of seconds: {secondsUntilUnhealthy}.");
+					Console.WriteLine($"Invalid number of seconds: {args[1]}.");
+					PrintUsage();
+					return false;
+				}
+			}
+
+			if (args.Length > 2)
+			{
+				if (!int.TryParse(args[2], out currentRequestsCount))
+
+				{
+					Console.WriteLine($"Invalid number of current requests: {args[2]}.");
 					PrintUsage();
 					return false;
 				}

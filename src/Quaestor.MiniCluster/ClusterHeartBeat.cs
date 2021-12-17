@@ -46,49 +46,6 @@ namespace Quaestor.MiniCluster
 			return Task.CompletedTask;
 		}
 
-		private async Task HeartBeatLoop()
-		{
-			await Task.Yield();
-
-			while (!_cancellationSource.IsCancellationRequested)
-			{
-				try
-				{
-					_logger.LogInformation("-------------Heartbeat [{time}]------------------",
-						DateTime.Now);
-
-					var members = _cluster.Members;
-
-					foreach (var member in members.ToList())
-					{
-						// This could be done in parallel. However, we're not in a hurry and the logs would get messy
-						if (member.MonitoringSuspended)
-						{
-							_logger.LogInformation(
-								$"Monitoring is suspended for {member} (probably shutting down).");
-
-							continue;
-						}
-
-						if (await CheckHeartBeatAsync(member))
-						{
-							if (member is IServerProcess serverProcess)
-							{
-								// Just to be save - in case they have been started previously.
-								_cluster.ServiceRegistrar?.Ensure(serverProcess);
-							}
-						}
-					}
-
-					await Task.Delay(_cluster.HeartBeatInterval);
-				}
-				catch (Exception exception)
-				{
-					_logger.LogError(exception, "Heartbeat loop failed");
-				}
-			}
-		}
-
 		public async Task<bool> CheckHeartBeatAsync(IManagedProcess member)
 		{
 			var timeout = _cluster.MemberResponseTimeOut;
@@ -145,6 +102,92 @@ namespace Quaestor.MiniCluster
 
 				return false;
 			}
+		}
+
+		private async Task HeartBeatLoop()
+		{
+			await Task.Yield();
+
+			while (!_cancellationSource.IsCancellationRequested)
+			{
+				try
+				{
+					_logger.LogInformation("-------------Heartbeat [{time}]------------------",
+						DateTime.Now);
+
+					var members = _cluster.Members;
+
+					foreach (var member in members.ToList())
+					{
+						// This could be done in parallel. However, we're not in a hurry and the logs would get messy
+						if (member.MonitoringSuspended)
+						{
+							_logger.LogInformation(
+								$"Monitoring is suspended for {member} (probably shutting down).");
+
+							continue;
+						}
+
+						if (await CheckHeartBeatAsync(member))
+						{
+							if (member is IServerProcess serverProcess)
+							{
+								// Just to be save - in case they have been started previously.
+								_cluster.ServiceRegistrar?.Ensure(serverProcess);
+							}
+						}
+					}
+
+					foreach (IManagedProcess managedProcess in members.ToList())
+					{
+						if (!managedProcess.IsDueForRecycling)
+						{
+							continue;
+						}
+
+						ServiceRegistrar serviceRegistrar = _cluster.ServiceRegistrar;
+
+						await TryRecycle(managedProcess, serviceRegistrar);
+					}
+
+					await Task.Delay(_cluster.HeartBeatInterval);
+				}
+				catch (Exception exception)
+				{
+					_logger.LogError(exception, "Heartbeat loop failed");
+				}
+			}
+		}
+
+		private async Task<bool> TryRecycle([NotNull] IManagedProcess managedProcess,
+		                                    [CanBeNull] ServiceRegistrar serviceRegistrar)
+		{
+			_logger.LogInformation("The process {process} is due for recycling.", managedProcess);
+
+			int ongoingRequests = await managedProcess.GetOngoingRequestCountAsync();
+
+			if (ongoingRequests > 0)
+			{
+				_logger.LogWarning(
+					"Process recycling is delayed due to one or more ongoing requests being processed.");
+				return false;
+			}
+
+			// TODO: Send shutdown signal (that sets unhealthy = true and then waits another few seconds before shutting down to avoid races)
+
+			await ManagedProcessUtils.ShutDownAsync(managedProcess, serviceRegistrar,
+				TimeSpan.Zero);
+
+			// However, the advantage of killing is that we can re-start it straigh away:
+			bool success = await managedProcess.StartAsync();
+
+			if (success &&
+			    managedProcess is IServerProcess serverProcess)
+			{
+				serviceRegistrar?.Ensure(serverProcess);
+			}
+
+			return success;
 		}
 	}
 }

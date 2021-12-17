@@ -22,9 +22,19 @@ namespace HelloWorld
 
 			Cluster cluster = new Cluster();
 
-			LocalProcess localProcess = GetWorkerProcess();
+			// Test process that becomes unhealthy after 75 seconds
+			LocalProcess localProcessWithBadHealth = GetWorkerProcess(5432, 75);
+			cluster.Add(localProcessWithBadHealth);
 
-			cluster.Add(localProcess);
+			// Test recycling by cluster after 3 minutes
+			LocalProcess localProcessWithGoodHealth = GetWorkerProcess(5433, -1);
+			localProcessWithGoodHealth.RecyclingIntervalHours = 0.05;
+			cluster.Add(localProcessWithGoodHealth);
+
+			// Test recycling for busy process after 4.5 minutes
+			LocalProcess localProcessWithGoodHealthButAlwaysBusy = GetWorkerProcess(5434, -1, 1);
+			localProcessWithGoodHealthButAlwaysBusy.RecyclingIntervalHours = 0.075;
+			cluster.Add(localProcessWithGoodHealthButAlwaysBusy);
 
 			_ = cluster.StartAsync();
 
@@ -35,15 +45,14 @@ namespace HelloWorld
 			cluster.Abort();
 		}
 
-		private static LocalProcess GetWorkerProcess()
+		private static LocalProcess GetWorkerProcess(int port, int unhealthyAfterSeconds,
+		                                             int currentRequests = 0)
 		{
 			string exePath = GetExePath();
 
-			int port = 5432;
-			int unhealthyAfterSeconds = 75;
-
 			var managedProcess = new LocalProcess(
-				WellKnownAgentType.Worker.ToString(), exePath, $"{port} {unhealthyAfterSeconds}",
+				WellKnownAgentType.Worker.ToString(), exePath,
+				$"{port} {unhealthyAfterSeconds} {currentRequests}",
 				"localhost", port);
 
 			managedProcess.ServiceNames.Add("Worker");
@@ -62,8 +71,11 @@ namespace HelloWorld
 				throw new InvalidOperationException("Cannot get directory of executing assembly.");
 			}
 
+			const string targetFramework = "net6.0";
+			const string buildConfiguration = "Debug";
+
 			string exePath = Path.Combine(assemblyDir, @"..\..\..\..",
-				@"WorkerProcess\bin\Debug\net5.0",
+				@$"WorkerProcess\bin\{buildConfiguration}\{targetFramework}",
 				"WorkerProcess.exe");
 			return exePath;
 		}

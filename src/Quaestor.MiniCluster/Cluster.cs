@@ -162,31 +162,13 @@ namespace Quaestor.MiniCluster
 			_logger.LogInformation("(Re-)starting process with status 'not serving': {process}",
 				process);
 
-			if (process.IsKnownRunning)
+			string message =
+				await ManagedProcessUtils.ShutDownAsync(process, ServiceRegistrar,
+					MemberMaxShutdownTime);
+
+			if (!string.IsNullOrEmpty(message))
 			{
-				process.MonitoringSuspended = true;
-				try
-				{
-					if (process is IServerProcess serverProcess)
-					{
-						ServiceRegistrar?.EnsureRemoved(serverProcess);
-					}
-
-					var isShutDown = await process.TryShutdownAsync(MemberMaxShutdownTime);
-
-					if (!isShutDown)
-					{
-						_logger.LogDebug(
-							"Process has not shut down within {maxProcessTime}s. We have to kill it.",
-							MemberMaxShutdownTime.TotalSeconds);
-
-						process.Kill();
-					}
-				}
-				finally
-				{
-					process.MonitoringSuspended = false;
-				}
+				_logger.LogDebug(message);
 			}
 
 			if (process.StartupFailureCount > MemberMaxStartupRetries)

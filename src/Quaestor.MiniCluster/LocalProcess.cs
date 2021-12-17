@@ -9,6 +9,7 @@ using Grpc.Health.V1;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
+using Quaestor.LoadReporting;
 using Quaestor.Utilities;
 
 namespace Quaestor.MiniCluster
@@ -74,6 +75,8 @@ namespace Quaestor.MiniCluster
 
 		public Dictionary<string, string> EnvironmentVariables { get; set; }
 
+		public double RecyclingIntervalHours { get; set; }
+
 		#region IServerProcess members
 
 		public string HostName { get; }
@@ -104,6 +107,21 @@ namespace Quaestor.MiniCluster
 
 		public ShutdownAction ClusterShutdownAction { get; set; }
 
+		public bool IsDueForRecycling
+		{
+			get
+			{
+				if (RecyclingIntervalHours == 0)
+				{
+					return false;
+				}
+
+				DateTime processStart = Process?.StartTime ?? Process.GetCurrentProcess().StartTime;
+
+				return processStart.AddHours(RecyclingIntervalHours) < DateTime.Now;
+			}
+		}
+
 		public async Task<bool> IsServingAsync()
 		{
 			if (Port < 0)
@@ -118,6 +136,50 @@ namespace Quaestor.MiniCluster
 			}
 
 			return await AreServicesHealthyAsync();
+		}
+
+		public async Task<int> GetOngoingRequestCountAsync()
+		{
+			if (Port < 0)
+			{
+				// Avoid waiting for the timeout of the health check, if possible.
+				return -1;
+			}
+
+			if (Channel == null)
+			{
+				return -1;
+			}
+
+			return await GetOngoingRequestCountAsync(Channel);
+		}
+
+		private async Task<int> GetOngoingRequestCountAsync(Channel channel)
+		{
+			int result = 0;
+			foreach (string serviceName in ServiceNames)
+			{
+				result += await GetOngoingRequestCountAsync(channel, serviceName);
+			}
+
+			return result;
+		}
+
+		private static async Task<int> GetOngoingRequestCountAsync([NotNull] Channel channel,
+			[NotNull] string serviceName)
+		{
+			var loadRequest = new LoadReportRequest
+			{
+				ServiceName = serviceName
+			};
+
+			LoadReportingGrpc.LoadReportingGrpcClient loadClient =
+				new LoadReportingGrpc.LoadReportingGrpcClient(channel);
+
+			LoadReportResponse loadReportResponse =
+				await loadClient.ReportLoadAsync(loadRequest);
+
+			return loadReportResponse.ServerStats.CurrentRequests;
 		}
 
 		public async Task<bool> StartAsync()
@@ -165,6 +227,10 @@ namespace Quaestor.MiniCluster
 				if (healthy)
 				{
 					_logger.LogInformation("Successfully started {process}", this);
+				}
+				else
+				{
+					_logger.LogWarning("Startup of {process} has failed", this);
 				}
 
 				return healthy;

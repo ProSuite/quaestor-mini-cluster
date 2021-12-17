@@ -49,6 +49,9 @@ clusterConfig:
   memberMaxShutdownTimeSeconds: 0
   # The number of times an agent re-start is attempted in case it is unhealthy or not running 
   memberMaxStartupRetries: 25
+  # The average recycling interval in hours of each member. Processes are only recycled if they are idle.
+  # The specified interval will be randomly varied by +-10% to disperse recycling times and maximize availability.
+  memberRecyclingIntervalHours: 24
 
 # List of agents that are managed by the cluster. Currently only local processes are supported.
 # All agents are started by the cluster and checked for health during the heart beat.

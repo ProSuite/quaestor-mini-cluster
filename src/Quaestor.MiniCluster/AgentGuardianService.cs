@@ -23,6 +23,8 @@ namespace Quaestor.MiniCluster
 
 		private Cluster _cluster;
 
+		private static readonly Random _random = new Random();
+
 		public AgentGuardianService(IConfiguration configuration)
 		{
 			_clusterConfig = new ClusterConfig();
@@ -109,14 +111,16 @@ namespace Quaestor.MiniCluster
 
 			foreach (AgentConfiguration agentConfiguration in KnownAgents.AgentConfigurations)
 			{
-				var managedProcesses = GetManagedProcesses(agentConfiguration);
+				var managedProcesses = GetManagedProcesses(agentConfiguration,
+					_clusterConfig.MemberRecyclingIntervalHours);
 
 				_cluster.AddRange(managedProcesses);
 			}
 		}
 
-		private static IEnumerable<LocalProcess> GetManagedProcesses(
-			AgentConfiguration agentConfiguration)
+		private IEnumerable<LocalProcess> GetManagedProcesses(
+			AgentConfiguration agentConfiguration,
+			double averageRecyclingIntervalHours)
 		{
 			if (agentConfiguration.Ports == null || agentConfiguration.Ports.Count == 0)
 			{
@@ -145,7 +149,8 @@ namespace Quaestor.MiniCluster
 					hostName, port, credentials)
 				{
 					EnvironmentVariables = agentConfiguration.EnvironmentVariables,
-					ClusterShutdownAction = agentConfiguration.ClusterShutdownAction
+					ClusterShutdownAction = agentConfiguration.ClusterShutdownAction,
+					RecyclingIntervalHours = GetRandomPlusMinus(averageRecyclingIntervalHours, 10)
 				};
 
 				if (agentConfiguration.ServiceNames != null)
@@ -156,8 +161,26 @@ namespace Quaestor.MiniCluster
 					}
 				}
 
+				_logger.LogDebug(
+					"Agent has been configured with recycling interval {recyclingHours}. Process details: {process}",
+					managedProcess.RecyclingIntervalHours, managedProcess);
+
 				yield return managedProcess;
 			}
+		}
+
+		/// <summary>
+		///     Return a random number dispersed around the specified average. This is NOT a gaussian distribution!
+		/// </summary>
+		/// <param name="average"></param>
+		/// <param name="plusMinusPercent"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		private static double GetRandomPlusMinus(double average, double plusMinusPercent)
+		{
+			double variation = _random.NextDouble() * plusMinusPercent * 2 - plusMinusPercent;
+
+			return average + variation;
 		}
 	}
 }

@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
+    <ProjectReference Include="..\Quaestor.LoadReporting\Quaestor.LoadReporting.csproj" />
     <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />
     <ProjectReference Include="..\Quaestor.KeyValueStore\Quaestor.KeyValueStore.csproj" />
     <ProjectReference Include="..\Quaestor.Utilities\Quaestor.Utilities.csproj" />

@@ -38,6 +38,12 @@ namespace Quaestor.MiniCluster
 		int StartupFailureCount { get; set; }
 
 		/// <summary>
+		///     Whether the process is due for recycling and the cluster manager is allowed a shut-down
+		///     and re-start of this process.
+		/// </summary>
+		bool IsDueForRecycling { get; }
+
+		/// <summary>
 		///     Whether the process is serving as per GRPC health check protocol. If false is returned,
 		///     the process can be re-started by the cluster.
 		/// </summary>
@@ -61,5 +67,11 @@ namespace Quaestor.MiniCluster
 		///     Kills the process immediately.
 		/// </summary>
 		void Kill();
+
+		/// <summary>
+		///     Gets the number of currently ongoing requests inside this process.
+		/// </summary>
+		/// <returns></returns>
+		Task<int> GetOngoingRequestCountAsync();
 	}
 }
