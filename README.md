@@ -14,6 +14,8 @@ In order to use the look-aside load balancer the involved services
 - Must report service health using the [GRPC health checking protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md)
 - Must [report service load](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.LoadReporting/load_reporting.proto) as defined in the Quaestor.LoadReporting assembly (see build directory to build the nuget package).
 
+The main load balancing logic is encapsulated in a single comparer class, that can be easily exchanged. Thanks to the collected load reports the server utilization and the load for each process can be used to decide on the priority of the service instances.
+
 ## Getting Started
 
 ### Building from Source
@@ -43,7 +45,7 @@ Start the quaestor executable in cluster mode:
 
 ```sh
 # Start Quaestor in cluster mode:
-$ cd .\src\Quaestor.Console\bin\Debug\net5.0
+$ cd .\src\Quaestor.Console\bin\Debug\net6.0
 $ quaestor cluster
 ```
 This starts 4 worker processes and one load balancer process as configured in [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml). An alternative directory containing the configuration can be specified on the command line (use quaestor cluster --help for details).
@@ -102,7 +104,7 @@ The load balancer can be used independently from the cluster manager. The releva
 
 ```sh
 # Start Quaestor in load balancer mode:
-$ cd .\src\Quaestor.Console\bin\Debug\net5.0
+$ cd .\src\Quaestor.Console\bin\Debug\net6.0
 $ quaestor load-balancer
 ```
 
@@ -111,7 +113,7 @@ $ quaestor load-balancer
 The load balancer service that is part of this cluster configuration can be tested with the following gRPCurl script (first download [gRPCurl](https://github.com/fullstorydev/grpcurl/releases) and make sure it is in the PATH environment variable):
 ```sh
 # For this example make sure the quaestor has been started in cluster mode:
-$ cd .\src\Quaestor.Console\bin\Debug\net5.0
+$ cd .\src\Quaestor.Console\bin\Debug\net6.0
 $ quaestor cluster
 # Start a new powershell and cd to the quaestor-mini-cluster repository. Then:
 $ cd examples
