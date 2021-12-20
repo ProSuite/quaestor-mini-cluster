@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
-using JetBrains.Annotations;
 
 namespace Quaestor.LoadReporting
 {
@@ -11,9 +10,19 @@ namespace Quaestor.LoadReporting
 		private readonly Dictionary<string, IServiceLoad> _loadByService =
 			new Dictionary<string, IServiceLoad>();
 
-		public void AllowMonitoring([NotNull] string serviceName,
-		                            [NotNull] IServiceLoad serviceLoad)
+		public void AllowMonitoring(string serviceName,
+		                            IServiceLoad serviceLoad)
 		{
+			if (serviceName == null)
+			{
+				throw new ArgumentNullException(nameof(serviceName));
+			}
+
+			if (serviceLoad == null)
+			{
+				throw new ArgumentNullException(nameof(serviceLoad));
+			}
+
 			_loadByService.Add(serviceName, serviceLoad);
 		}
 

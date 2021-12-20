@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using JetBrains.Annotations;
 
 namespace Quaestor.LoadReporting
 {
@@ -27,13 +26,13 @@ namespace Quaestor.LoadReporting
 		public int CurrentProcessCount { get; set; }
 		public double ServerUtilization { get; set; }
 
-		[PublicAPI]
+		// ReSharper disable once UnusedMember.Global (PublicAPI)
 		public void StartRequest()
 		{
 			CurrentProcessCount++;
 		}
 
-		[PublicAPI]
+		// ReSharper disable once UnusedMember.Global (PublicAPI)
 		public void EndRequest()
 		{
 			CurrentProcessCount--;
