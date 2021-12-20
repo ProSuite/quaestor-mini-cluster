@@ -44,7 +44,7 @@ clusterConfig:
   # The heart beat interval in seconds.
   heartBeatIntervalSeconds: 30
   # The time-out for the health check performed on each agent during the heart beat
-  memberResponseTimeOutSeconds: 5
+  memberResponseTimeOutSeconds: 20
   # The time-out for an agent shut-down in case it is not healthy (NOT IMPLEMENTED for local process)
   memberMaxShutdownTimeSeconds: 0
   # The number of times an agent re-start is attempted in case it is unhealthy or not running 
