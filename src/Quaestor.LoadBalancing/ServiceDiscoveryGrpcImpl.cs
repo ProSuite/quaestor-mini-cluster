@@ -31,8 +31,8 @@ namespace Quaestor.LoadBalancing
 		private readonly ILogger<ServiceDiscoveryGrpcImpl> _logger =
 			Log.CreateLogger<ServiceDiscoveryGrpcImpl>();
 
-		private readonly TimeSpan _workerResponseTimeout = TimeSpan.FromSeconds(2);
-		private readonly TimeSpan _recentlyUsedServiceTimeout = TimeSpan.FromSeconds(5);
+		private TimeSpan WorkerResponseTimeout =>
+			TimeSpan.FromSeconds(WorkerResponseTimeoutSeconds);
 
 		public ServiceDiscoveryGrpcImpl(
 			[NotNull] ServiceRegistry serviceRegistry,
@@ -118,6 +118,18 @@ namespace Quaestor.LoadBalancing
 		public bool RemoveUnhealthyServices { get; set; }
 
 		/// <summary>
+		///     The timeout in seconds that is waited for when checking an individual worker service.
+		///     It is used both for checking health and getting a load report.
+		/// </summary>
+		public double WorkerResponseTimeoutSeconds { get; set; } = 2;
+
+		/// <summary>
+		///     The time a service that has just been returned to a requester, remains in the least-recently-used
+		///     cache which results in a low priority for re-use.
+		/// </summary>
+		public double RecentlyUsedServiceTimeoutSeconds { get; set; } = 5;
+
+		/// <summary>
 		///     The comparer to be used to prioritize the service locations that have been qualified
 		///     using load reports.
 		/// </summary>
@@ -150,7 +162,7 @@ namespace Quaestor.LoadBalancing
 
 			ConcurrentBag<QualifiedService> services =
 				await serviceEvaluator.GetHealthyServiceLocations(allServices,
-					_workerResponseTimeout, request.MaxCount);
+					WorkerResponseTimeout, request.MaxCount);
 
 			foreach (QualifiedService qualifiedService in services)
 			{
@@ -187,7 +199,7 @@ namespace Quaestor.LoadBalancing
 
 			var qualifiedServices =
 				await serviceEvaluator.GetLoadQualifiedServices(allServices,
-					_workerResponseTimeout);
+					WorkerResponseTimeout);
 
 			if (qualifiedServices.Count == 0)
 			{
@@ -220,9 +232,11 @@ namespace Quaestor.LoadBalancing
 
 		private void ExcludeRecentlyUsed([NotNull] ICollection<QualifiedService> orderedServices)
 		{
+			TimeSpan recentlyUsedTimeout = TimeSpan.FromSeconds(RecentlyUsedServiceTimeoutSeconds);
+
 			if (orderedServices.Count > 1 && !_recentlyUsedServices.IsEmpty)
 			{
-				DequeueNonRecentlyUsed(_recentlyUsedServices, _recentlyUsedServiceTimeout);
+				DequeueNonRecentlyUsed(_recentlyUsedServices, recentlyUsedTimeout);
 
 				foreach (QualifiedService orderedLocation in orderedServices.ToList())
 				{
@@ -231,6 +245,10 @@ namespace Quaestor.LoadBalancing
 						// Move it to the end:
 						orderedServices.Remove(orderedLocation);
 						orderedServices.Add(orderedLocation);
+
+						_logger.LogDebug(
+							"{serviceLocation} has been used less than {timeout} ago and is moved to the end of the priority list.",
+							orderedLocation.ServiceLocation, recentlyUsedTimeout);
 					}
 				}
 			}

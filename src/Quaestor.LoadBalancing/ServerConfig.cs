@@ -14,5 +14,9 @@ namespace Quaestor.LoadBalancing
 		public string PrivateKeyFile { get; set; }
 
 		public bool EnforceMutualTls { get; set; }
+
+		public double ServiceResponseTimeoutSeconds { get; set; }
+
+		public double RecentlyUsedTimeoutSeconds { get; set; }
 	}
 }

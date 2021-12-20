@@ -35,6 +35,17 @@ serverConfig:
   # Enforce mutual authentication for transport layer security (SSL/TLS).
   enforceMutualTls: false
 
+  # The timeout in seconds that is waited for when checking an individual worker service.
+  # It is used both for checking health and getting the load report. If the worker service does not
+  # respond within this time frame, it will be ignored.
+  serviceResponseTimeoutSeconds: 2
+
+  # The time a service, that has just been returned to a requestor, remains in the least-recently-used
+  # cache which results in a low priority for immediate re-use. This is used to avoid race conditions
+  # if two clients request a service location at the very same time. It has the effect of a round-robin
+  # secondary balancing mechanism.
+  recentlyUsedTimeoutSeconds: 5
+
 # --------------------------------------------------------
 # Configuration section for the cluster management mode.
 # # This section is relevant if quaestor is started with the 'cluster' option
@@ -63,7 +74,7 @@ clusterConfig:
 agents:
   Worker:
     # The (absolute or relative) path to the executable
-    executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net5.0\WorkerProcess.exe
+    executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net6.0\WorkerProcess.exe
     # The command line arguments. {HostName} and {Port} will be replaced by the respective values 
     # defined below.
     commandLineArguments: "{Port} 100"

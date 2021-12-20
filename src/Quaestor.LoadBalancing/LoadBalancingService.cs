@@ -123,7 +123,9 @@ namespace Quaestor.LoadBalancing
 
 			var serviceDiscoveryGrpcImpl = new ServiceDiscoveryGrpcImpl(serviceRegistry)
 			{
-				RemoveUnhealthyServices = !_keyValueStoreIsLocal
+				RemoveUnhealthyServices = !_keyValueStoreIsLocal,
+				WorkerResponseTimeoutSeconds = serverConfig.ServiceResponseTimeoutSeconds,
+				RecentlyUsedServiceTimeoutSeconds = serverConfig.RecentlyUsedTimeoutSeconds
 			};
 
 			var health = new HealthServiceImpl();
