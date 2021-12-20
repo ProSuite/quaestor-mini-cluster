@@ -11,9 +11,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.KeyValueStore;
-using Quaestor.LoadReporting;
 using Quaestor.ServiceDiscovery;
-using Quaestor.Utilities;
 
 namespace Quaestor.LoadBalancing
 {
@@ -25,10 +23,16 @@ namespace Quaestor.LoadBalancing
 		private readonly ConcurrentDictionary<ServiceLocation, Channel> _channels =
 			new ConcurrentDictionary<ServiceLocation, Channel>();
 
+		private readonly ConcurrentQueue<QualifiedService> _recentlyUsedServices =
+			new ConcurrentQueue<QualifiedService>();
+
 		private static readonly Random _random = new Random();
 
 		private readonly ILogger<ServiceDiscoveryGrpcImpl> _logger =
 			Log.CreateLogger<ServiceDiscoveryGrpcImpl>();
+
+		private readonly TimeSpan _workerResponseTimeout = TimeSpan.FromSeconds(2);
+		private readonly TimeSpan _recentlyUsedServiceTimeout = TimeSpan.FromSeconds(5);
 
 		public ServiceDiscoveryGrpcImpl(
 			[NotNull] ServiceRegistry serviceRegistry,
@@ -39,7 +43,7 @@ namespace Quaestor.LoadBalancing
 			_clientCertificate = clientCertificate;
 		}
 
-		public override Task<DiscoverServicesResponse> DiscoverServices(
+		public override async Task<DiscoverServicesResponse> DiscoverServices(
 			DiscoverServicesRequest request, ServerCallContext context)
 		{
 			DiscoverServicesResponse response = null;
@@ -51,7 +55,7 @@ namespace Quaestor.LoadBalancing
 				response = new DiscoverServicesResponse();
 
 				IList<ServiceLocationMsg> serviceLocationMessages =
-					GetRandomServiceLocationMessages(request);
+					await GetHealthyServiceLocationMessages(request);
 
 				response.ServiceLocations.AddRange(serviceLocationMessages);
 
@@ -65,7 +69,7 @@ namespace Quaestor.LoadBalancing
 				SetUnhealthy();
 			}
 
-			return Task.FromResult(response);
+			return response;
 		}
 
 		public override async Task<DiscoverServicesResponse> DiscoverTopServices(
@@ -113,107 +117,172 @@ namespace Quaestor.LoadBalancing
 		/// </summary>
 		public bool RemoveUnhealthyServices { get; set; }
 
+		/// <summary>
+		///     The comparer to be used to prioritize the service locations that have been qualified
+		///     using load reports.
+		/// </summary>
+		public IComparer<QualifiedService> ServiceComparer { get; set; } = new LoadReportComparer();
+
 		private void SetUnhealthy()
 		{
 			Health?.SetStatus(ServiceName, HealthCheckResponse.Types.ServingStatus.NotServing);
 		}
 
-		private IList<ServiceLocationMsg> GetRandomServiceLocationMessages(
+		private async Task<IList<ServiceLocationMsg>> GetHealthyServiceLocationMessages(
 			[NotNull] DiscoverServicesRequest request)
 		{
-			List<ServiceLocation> allServices = GetShuffledServices(request);
+			// By default the prioritization should be random rather than the order defined in the
+			// service registry. TODO: Configurable prioritization:
+			// Random (using shuffled services)
+			// Round-robin (using least-recently-used list) and based on available / best services
+			List<ServiceLocation> allServices = GetServices(request, true);
 
-			IList<ServiceLocationMsg> result = ToServiceLocationMessages(
-				GetHealthyServiceLocations(allServices, request.MaxCount)).ToList();
+			_logger.LogDebug("{count} {serviceName} service(s) found in service registry:",
+				allServices.Count, request.ServiceName);
 
-			return result;
+			if (allServices.Count == 0)
+			{
+				return new List<ServiceLocationMsg>(0);
+			}
+
+			ServiceEvaluator serviceEvaluator =
+				new ServiceEvaluator(ServiceComparer, _channels, _clientCertificate);
+
+			ConcurrentBag<QualifiedService> services =
+				await serviceEvaluator.GetHealthyServiceLocations(allServices,
+					_workerResponseTimeout, request.MaxCount);
+
+			foreach (QualifiedService qualifiedService in services)
+			{
+				if (RemoveUnhealthyServices && !qualifiedService.IsHealthy)
+				{
+					var unhealthyLocation = qualifiedService.ServiceLocation;
+
+					_serviceRegistry.EnsureRemoved(unhealthyLocation.ServiceName,
+						unhealthyLocation.HostName, unhealthyLocation.Port,
+						unhealthyLocation.UseTls);
+				}
+			}
+
+			return ToServiceLocationMessages(services
+				.Where(qs => qs.IsHealthy)
+				.Select(qs => qs.ServiceLocation)).ToList();
 		}
 
 		private async Task<IList<ServiceLocationMsg>> GetTopServiceLocationMessages(
 			[NotNull] DiscoverServicesRequest request)
 		{
-			// Shuffle first because typically many will have rank 0 -> try not to return the same one for concurrent requests
-			List<ServiceLocation> allServices = GetShuffledServices(request);
+			List<ServiceLocation> allServices = GetServices(request);
 
-			IList<ServiceLocation> servicesByDesirability =
-				await GetServicesRankedByLoad(allServices, request.MaxCount);
+			_logger.LogDebug("{count} {serviceName} service(s) found in service registry:",
+				allServices.Count, request.ServiceName);
+
+			if (allServices.Count == 0)
+			{
+				return new List<ServiceLocationMsg>(0);
+			}
+
+			ServiceEvaluator serviceEvaluator =
+				new ServiceEvaluator(ServiceComparer, _channels, _clientCertificate);
+
+			var qualifiedServices =
+				await serviceEvaluator.GetLoadQualifiedServices(allServices,
+					_workerResponseTimeout);
+
+			if (qualifiedServices.Count == 0)
+			{
+				// Try again with very high time-out:
+				qualifiedServices =
+					await serviceEvaluator.GetLoadQualifiedServices(allServices,
+						TimeSpan.FromSeconds(30));
+			}
+
+			_logger.LogDebug("{serviceCount} service location(s) responded with a load report.",
+				qualifiedServices.Count);
+
+			if (qualifiedServices.Count == 0)
+			{
+				return new List<ServiceLocationMsg>(0);
+			}
+
+			IList<QualifiedService> orderedServices =
+				serviceEvaluator.Prioritize(qualifiedServices);
+
+			ExcludeRecentlyUsed(orderedServices);
 
 			int maxResultCount = request.MaxCount == 0 ? -1 : request.MaxCount;
 
 			IList<ServiceLocationMsg> result =
-				ToServiceLocationMessages(servicesByDesirability, maxResultCount).ToList();
+				UseTopServices(orderedServices, maxResultCount).ToList();
 
 			return result;
 		}
 
-		private IEnumerable<ServiceLocation> GetHealthyServiceLocations(
-			[NotNull] IList<ServiceLocation> allServices,
+		private void ExcludeRecentlyUsed([NotNull] ICollection<QualifiedService> orderedServices)
+		{
+			if (orderedServices.Count > 1 && !_recentlyUsedServices.IsEmpty)
+			{
+				DequeueNonRecentlyUsed(_recentlyUsedServices, _recentlyUsedServiceTimeout);
+
+				foreach (QualifiedService orderedLocation in orderedServices.ToList())
+				{
+					if (_recentlyUsedServices.Contains(orderedLocation))
+					{
+						// Move it to the end:
+						orderedServices.Remove(orderedLocation);
+						orderedServices.Add(orderedLocation);
+					}
+				}
+			}
+		}
+
+		private static void DequeueNonRecentlyUsed(
+			[NotNull] ConcurrentQueue<QualifiedService> services,
+			TimeSpan timeout)
+		{
+			// Filter previously (i.e. in the last few seconds) returned services:
+			// To avoid races 
+			while (services.TryPeek(out QualifiedService previous))
+			{
+				if (previous.LastUsed == null)
+					throw new InvalidOperationException(
+						"Used service location has no LastUsed date");
+
+				if (previous.LastUsed.Value + timeout < DateTime.Now)
+				{
+					services.TryDequeue(out _);
+				}
+				else
+				{
+					return;
+				}
+			}
+		}
+
+		private IEnumerable<ServiceLocationMsg> UseTopServices(
+			IEnumerable<QualifiedService> qualifiedServices,
 			int maxCount = -1)
 		{
-			int yieldCount = 0;
+			int resultCount = 0;
 
-			foreach (var serviceLocation in allServices)
+			foreach (QualifiedService qualifiedService in qualifiedServices)
 			{
-				if (maxCount > 0 && yieldCount >= maxCount)
+				if (maxCount > 0 && resultCount >= maxCount)
 				{
 					yield break;
 				}
 
-				if (IsServiceHealthy(serviceLocation))
-				{
-					yield return serviceLocation;
-					yieldCount++;
-				}
+				ServiceLocationMsg serviceLocationMsg =
+					ToServiceLocationMsg(qualifiedService.ServiceLocation);
+
+				// And add it to the least-recently-used queue
+				qualifiedService.LastUsed = DateTime.Now;
+				_recentlyUsedServices.Enqueue(qualifiedService);
+
+				yield return serviceLocationMsg;
+
+				resultCount++;
 			}
-		}
-
-		private bool IsServiceHealthy(ServiceLocation serviceLocation)
-		{
-			ChannelBase channel = GetChannel(serviceLocation);
-
-			Health.HealthClient healthClient = new Health.HealthClient(channel);
-
-			bool serving = GrpcUtils.IsServing(healthClient, serviceLocation.ServiceName,
-				out StatusCode statusCode);
-
-			if (serving)
-			{
-				return true;
-			}
-
-			_logger.LogWarning(
-				"Service location {location} is unhealthy ({status}). It will be removed from the service registry!",
-				serviceLocation, statusCode);
-
-			// In case it is restarted (or only temporarily offline) the service will be re-registered by the cluster...
-			// But only if the service registry is in a global key-value store!
-			if (RemoveUnhealthyServices)
-			{
-				_serviceRegistry.EnsureRemoved(serviceLocation.ServiceName,
-					serviceLocation.HostName, serviceLocation.Port, serviceLocation.UseTls);
-			}
-
-			return false;
-		}
-
-		private ChannelBase GetChannel(ServiceLocation serviceLocation)
-		{
-			if (!_channels.TryGetValue(serviceLocation, out Channel channel))
-			{
-				ChannelCredentials channelCredentials = GrpcUtils.CreateChannelCredentials(
-					serviceLocation.UseTls, _clientCertificate);
-
-				channel = GrpcUtils.CreateChannel(serviceLocation.HostName, serviceLocation.Port,
-					channelCredentials);
-
-				if (!_channels.TryAdd(serviceLocation, channel))
-				{
-					// It's been added in the meanwhile by another request on another thread
-					channel = _channels[serviceLocation];
-				}
-			}
-
-			return channel;
 		}
 
 		private static IEnumerable<ServiceLocationMsg> ToServiceLocationMessages(
@@ -250,7 +319,8 @@ namespace Quaestor.LoadBalancing
 			return serviceLocationMsg;
 		}
 
-		private List<ServiceLocation> GetShuffledServices([NotNull] DiscoverServicesRequest request)
+		private List<ServiceLocation> GetServices([NotNull] DiscoverServicesRequest request,
+		                                          bool shuffled = false)
 		{
 			List<ServiceLocation> allServices =
 				_serviceRegistry.GetServiceLocations(request.ServiceName).ToList();
@@ -258,7 +328,10 @@ namespace Quaestor.LoadBalancing
 			_logger.LogDebug("{count} {serviceName} service(s) found in service registry:",
 				allServices.Count, request.ServiceName);
 
-			Shuffle(allServices);
+			if (shuffled)
+			{
+				Shuffle(allServices);
+			}
 
 			foreach (ServiceLocation serviceLocation in allServices)
 			{
@@ -266,148 +339,6 @@ namespace Quaestor.LoadBalancing
 			}
 
 			return allServices;
-		}
-
-		private async Task<IList<ServiceLocation>> GetServicesRankedByLoad(
-			[NotNull] IEnumerable<ServiceLocation> serviceLocations,
-			int maxCount)
-		{
-			if (maxCount <= 0)
-			{
-				throw new ArgumentOutOfRangeException(nameof(maxCount));
-			}
-
-			Dictionary<ServiceLocation, double> servicesByDesirability =
-				new Dictionary<ServiceLocation, double>();
-
-			var freeList = new List<ServiceLocation>();
-
-			int failureCount = 0;
-			Exception lastException = null;
-			foreach (var serviceLocation in serviceLocations)
-			{
-				if (freeList.Count >= maxCount)
-				{
-					// Do not differentiate between free services - it's not worth the effort (or is it?)
-					return freeList;
-				}
-
-				try
-				{
-					if (!IsServiceHealthy(serviceLocation))
-					{
-						_logger.LogDebug(
-							"Service location {serviceLocation} is unhealthy and will not be used.",
-							serviceLocation);
-
-						continue;
-					}
-
-					double desirability = await GetServiceRank(serviceLocation);
-
-					if (desirability < 0)
-					{
-						_logger.LogDebug(
-							"Service location {serviceLocation} is not desirable and will not be used.",
-							serviceLocation);
-
-						continue;
-					}
-
-					if (desirability == 0)
-					{
-						freeList.Add(serviceLocation);
-					}
-
-					servicesByDesirability.Add(serviceLocation, desirability);
-				}
-				catch (Exception e)
-				{
-					_logger.LogWarning(e, "Error checking service health for {serviceLocation}",
-						serviceLocation);
-
-					failureCount++;
-
-					lastException = e;
-				}
-			}
-
-			var result = servicesByDesirability.Keys.OrderBy(sl => servicesByDesirability[sl])
-				.ToList();
-
-			if (result.Count == 0 && failureCount > 0 && lastException != null)
-			{
-				// Something more serious might be wrong and we cannot serve even one location
-				_logger.LogWarning(
-					"No service can be served AND {failureCount} exceptions occurred! Throwing last exception...");
-
-				throw lastException;
-			}
-
-			return result;
-		}
-
-		/// <summary>
-		///     Returns a ranking number for the specified service location. Lower is
-		///     better as long as the rank is positive.
-		///     Locations that report 0 request capacity, -1 is returned.
-		///     For locations reporting 0 current requests, 0 is returned. These services
-		///     are all considered equally good. Requests with at least one ongoing request
-		///     are weighted by the CPU load of the service process.
-		/// </summary>
-		/// <param name="serviceLocation"></param>
-		/// <returns></returns>
-		private async Task<double> GetServiceRank(
-			[NotNull] ServiceLocation serviceLocation)
-		{
-			var loadRequest = new LoadReportRequest
-			{
-				Scope = serviceLocation.Scope,
-				ServiceName = serviceLocation.ServiceName
-			};
-
-			LoadReportingGrpc.LoadReportingGrpcClient loadClient =
-				new LoadReportingGrpc.LoadReportingGrpcClient(GetChannel(serviceLocation));
-
-			LoadReportResponse loadReportResponse =
-				await loadClient.ReportLoadAsync(loadRequest);
-
-			if (loadReportResponse.KnownLoadRate >= 0)
-			{
-				return loadReportResponse.KnownLoadRate;
-			}
-
-			double cpuUsage = loadReportResponse.ServerStats.ServerUtilization;
-			int currentRequestCount = loadReportResponse.ServerStats.CurrentRequests;
-
-			int capacity = loadReportResponse.ServerStats.RequestCapacity;
-
-			if (capacity < 0)
-			{
-				_logger.LogDebug(
-					"Service location {serviceLocation} reports capacity -1 (ignore). The request count will be used.",
-					serviceLocation);
-
-				// Ignore capacity, just return the workload
-				return cpuUsage > 0
-					? currentRequestCount * cpuUsage
-					: currentRequestCount;
-			}
-
-			if (capacity == 0)
-			{
-				_logger.LogDebug(
-					"Service location {serviceLocation} reports capacity 0 (do not use) and will not be used.",
-					serviceLocation);
-
-				return -1;
-			}
-
-			double workload = (double) currentRequestCount / capacity;
-
-			var desirability = cpuUsage > 0 ? workload * cpuUsage : workload;
-
-			return desirability;
 		}
 
 		private static void Shuffle<T>(IList<T> list)
