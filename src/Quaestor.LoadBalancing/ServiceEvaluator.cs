@@ -68,6 +68,8 @@ namespace Quaestor.LoadBalancing
 				}
 			}
 
+			ProcessUtils.EnsureThreadIdInName();
+
 			if (result.Count == 0 && _lastException != null)
 			{
 				// Something more serious might be wrong and we cannot serve even one location
@@ -101,6 +103,8 @@ namespace Quaestor.LoadBalancing
 			var allReportRetrievals = await Task.WhenAll(getReportTasks);
 
 			watch.Stop();
+
+			ProcessUtils.EnsureThreadIdInName();
 
 			_logger.LogDebug("Received {loadReportCount} load reports in {seconds}ms.",
 				allReportRetrievals.Count(r => r), watch.ElapsedMilliseconds);
@@ -210,6 +214,8 @@ namespace Quaestor.LoadBalancing
 
 				LoadReportResponse loadReportResponse =
 					await GetLoadReport(serviceLocation, channel, workerResponseTimeout);
+
+				ProcessUtils.EnsureThreadIdInName();
 
 				if (loadReportResponse.ServerStats.RequestCapacity == 0)
 				{

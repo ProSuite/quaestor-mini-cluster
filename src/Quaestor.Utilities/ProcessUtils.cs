@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using JetBrains.Annotations;
 
 namespace Quaestor.Utilities
@@ -83,6 +84,11 @@ namespace Quaestor.Utilities
 			return exceptProcessId >= 0
 				? processes.AsEnumerable().Count(p => p.Id != exceptProcessId)
 				: processes.Length;
+		}
+
+		public static void EnsureThreadIdInName()
+		{
+			Thread.CurrentThread.Name = $"Thread {Thread.CurrentThread.ManagedThreadId}";
 		}
 	}
 }

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Quaestor.Environment;
 using Quaestor.KeyValueStore;
 using Quaestor.ServiceDiscovery;
+using Quaestor.Utilities;
 
 namespace Quaestor.LoadBalancing
 {
@@ -50,6 +51,8 @@ namespace Quaestor.LoadBalancing
 
 			try
 			{
+				ProcessUtils.EnsureThreadIdInName();
+
 				Stopwatch watch = Stopwatch.StartNew();
 
 				response = new DiscoverServicesResponse();
@@ -79,6 +82,8 @@ namespace Quaestor.LoadBalancing
 
 			try
 			{
+				ProcessUtils.EnsureThreadIdInName();
+
 				Stopwatch watch = Stopwatch.StartNew();
 
 				response = new DiscoverServicesResponse();
@@ -87,8 +92,11 @@ namespace Quaestor.LoadBalancing
 
 				response.ServiceLocations.AddRange(result);
 
-				_logger.LogDebug("Returning {count} service location(s) [{time}ms]", result.Count,
-					watch.ElapsedMilliseconds);
+				_logger.LogDebug(
+					"Returning {count} service location(s) [{time}ms]: {serviceLocations}",
+					result.Count,
+					watch.ElapsedMilliseconds,
+					string.Concat(result.Select(s => $"{s.HostName}:{s.Port}, ")));
 			}
 			catch (Exception e)
 			{
