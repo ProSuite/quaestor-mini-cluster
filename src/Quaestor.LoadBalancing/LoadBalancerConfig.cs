@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 namespace Quaestor.LoadBalancing
 {
 	[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-	public class ServerConfig
+	public class LoadBalancerConfig
 	{
 		public string HostName { get; set; }
 

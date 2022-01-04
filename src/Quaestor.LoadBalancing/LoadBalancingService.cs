@@ -22,7 +22,7 @@ namespace Quaestor.LoadBalancing
 		private static readonly ILogger<LoadBalancingService> _logger =
 			Log.CreateLogger<LoadBalancingService>();
 
-		private readonly ServerConfig _serverConfig;
+		private readonly LoadBalancerConfig _loadBalancerConfig;
 
 		private Server _server;
 
@@ -32,8 +32,13 @@ namespace Quaestor.LoadBalancing
 		{
 			KnownAgents.Configure(configuration);
 
-			_serverConfig = new ServerConfig();
-			configuration.GetSection(nameof(ServerConfig)).Bind(_serverConfig);
+			_loadBalancerConfig = new LoadBalancerConfig();
+			configuration.GetSection(nameof(LoadBalancerConfig)).Bind(_loadBalancerConfig);
+
+			if (string.IsNullOrEmpty(_loadBalancerConfig.HostName))
+			{
+				_logger.LogWarning("Invalid configuration: Hostname is null.");
+			}
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,12 +53,12 @@ namespace Quaestor.LoadBalancing
 			// Get key-value store and service registry:
 			ServiceRegistry serviceRegistry = await CreateServiceRegistryAsync();
 
-			if (_serverConfig == null)
+			if (_loadBalancerConfig == null)
 			{
 				throw new InvalidOperationException("Missing server configuration");
 			}
 
-			_server = StartLoadBalancerService(serviceRegistry, _serverConfig);
+			_server = StartLoadBalancerService(serviceRegistry, _loadBalancerConfig);
 		}
 
 		public override async Task StopAsync(CancellationToken cancellationToken)
@@ -114,18 +119,18 @@ namespace Quaestor.LoadBalancing
 		}
 
 		private Server StartLoadBalancerService([NotNull] ServiceRegistry serviceRegistry,
-		                                        [NotNull] ServerConfig serverConfig)
+		                                        [NotNull] LoadBalancerConfig loadBalancerConfig)
 		{
 			ServerCredentials serverCredentials =
-				GrpcServerUtils.GetServerCredentials(serverConfig.Certificate,
-					serverConfig.PrivateKeyFile,
-					serverConfig.EnforceMutualTls);
+				GrpcServerUtils.GetServerCredentials(loadBalancerConfig.Certificate,
+					loadBalancerConfig.PrivateKeyFile,
+					loadBalancerConfig.EnforceMutualTls);
 
 			var serviceDiscoveryGrpcImpl = new ServiceDiscoveryGrpcImpl(serviceRegistry)
 			{
 				RemoveUnhealthyServices = !_keyValueStoreIsLocal,
-				WorkerResponseTimeoutSeconds = serverConfig.ServiceResponseTimeoutSeconds,
-				RecentlyUsedServiceTimeoutSeconds = serverConfig.RecentlyUsedTimeoutSeconds
+				WorkerResponseTimeoutSeconds = loadBalancerConfig.ServiceResponseTimeoutSeconds,
+				RecentlyUsedServiceTimeoutSeconds = loadBalancerConfig.RecentlyUsedTimeoutSeconds
 			};
 
 			var health = new HealthServiceImpl();
@@ -140,7 +145,7 @@ namespace Quaestor.LoadBalancing
 				HealthCheckResponse.Types.ServingStatus.Serving);
 
 			_logger.LogInformation("Starting load-balancer service at {host}:{port}",
-				serverConfig.HostName, serverConfig.Port);
+				loadBalancerConfig.HostName, loadBalancerConfig.Port);
 
 			var server =
 				new Server
@@ -152,7 +157,7 @@ namespace Quaestor.LoadBalancing
 					},
 					Ports =
 					{
-						new ServerPort(serverConfig.HostName, serverConfig.Port,
+						new ServerPort(loadBalancerConfig.HostName, loadBalancerConfig.Port,
 							serverCredentials)
 					}
 				};
@@ -165,7 +170,7 @@ namespace Quaestor.LoadBalancing
 
 			_logger.LogInformation(
 				"Load balancer service is serving at {protocol}://{host}:{port}",
-				protocol, serverConfig.HostName, serverConfig.Port);
+				protocol, loadBalancerConfig.HostName, loadBalancerConfig.Port);
 
 			return server;
 		}
