@@ -60,9 +60,6 @@ clusterConfig:
   memberMaxShutdownTimeSeconds: 0
   # The number of times an agent re-start is attempted in case it is unhealthy or not running 
   memberMaxStartupRetries: 25
-  # The average recycling interval in hours of each member. Processes are only recycled if they are idle.
-  # The specified interval will be randomly varied by +-10% to disperse recycling times and maximize availability.
-  memberRecyclingIntervalHours: 24
 
 # List of agents that are managed by the cluster. Currently only local processes are supported.
 # All agents are started by the cluster and checked for health during the heart beat.
@@ -78,11 +75,13 @@ agents:
     # The command line arguments. {HostName} and {Port} will be replaced by the respective values 
     # defined below.
     commandLineArguments: "{Port} 100"
-    # The number of processes to be started. Typically the port list
+    # The number of processes to be started. Typically the port list (see below) contains the same 
+    # number of items.
     processCount: 4
-    # Currently valid shutdown actions: {None, Kill}
+    # The action to be performed on each member if the cluster is shut down. Currently valid 
+    # shutdown actions: {None, Kill}
     clusterShutdownAction: Kill
-    # The dictionary of key: value pairs that should be added as environment variables
+    # The dictionary of {name: value} pairs that should be added as environment variables
     environmentVariables:
       QUAESTOR_WORKER_EXIT_WHEN_UNHEALTHY: false
     # The host name to be used for health-checks and service discovery by the LoadBalancer
@@ -95,6 +94,12 @@ agents:
     # The list of services that respond to health check requests
     serviceNames:
     - Worker
+    # The average process recycling interval in hours. Processes are only recycled if they are
+    # idle. The specified interval will be randomly varied by +-10% to disperse recycling times 
+    # and maximize availability. 0 (or not specified) means no process recycling will take place.
+    # NOTE: to determine if a process is idle, its services must implement load reporting.
+    #       otherwise the service will be killed and restarted immedidately.
+    recyclingIntervalHours: 24
 
   LoadBalancer:
     executablePath: quaestor.exe
@@ -111,6 +116,7 @@ agents:
     - 5150
     serviceNames:
     - ServiceDiscoveryGrpc
+    recyclingIntervalHours: 0
 
 #  # Example for an etcd-based, distributed keyvalue store to be used by the service discovery. 
 #  # Remove this section to use a local in-memory key-value store containing just the Worker agents.

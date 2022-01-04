@@ -71,5 +71,14 @@ namespace Quaestor.Environment
 		/// </summary>
 		[CanBeNull]
 		public List<string> ServiceNames { get; set; }
+
+		/// <summary>
+		///     The average process recycling interval in hours. Processes are only recycled if they are
+		///     idle. The specified interval will be randomly varied by +-10% to disperse recycling times
+		///     and maximize availability.
+		///     NOTE: to determine if a process is idle, its services must implement load reporting.
+		///     Otherwise the service will be killed and restarted immediately.
+		/// </summary>
+		public double RecyclingIntervalHours { get; set; }
 	}
 }

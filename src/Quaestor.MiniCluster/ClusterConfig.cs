@@ -10,7 +10,5 @@ namespace Quaestor.MiniCluster
 		public int MemberMaxShutdownTimeSeconds { get; set; } = 45;
 
 		public int MemberMaxStartupRetries { get; set; } = 25;
-
-		public double MemberRecyclingIntervalHours { get; set; } = 24;
 	}
 }

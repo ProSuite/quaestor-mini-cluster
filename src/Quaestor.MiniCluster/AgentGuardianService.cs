@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ namespace Quaestor.MiniCluster
 
 		private void ConfigureEnvironment(IConfiguration configuration)
 		{
-			_logger.LogDebug("Configuring cluster agents...");
+			_logger.LogInformation("Configuring cluster agents...");
 
 			KnownAgents.ConfigureAgents(configuration);
 
@@ -111,16 +112,14 @@ namespace Quaestor.MiniCluster
 
 			foreach (AgentConfiguration agentConfiguration in KnownAgents.AgentConfigurations)
 			{
-				var managedProcesses = GetManagedProcesses(agentConfiguration,
-					_clusterConfig.MemberRecyclingIntervalHours);
+				var managedProcesses = GetManagedProcesses(agentConfiguration);
 
 				_cluster.AddRange(managedProcesses);
 			}
 		}
 
 		private IEnumerable<LocalProcess> GetManagedProcesses(
-			AgentConfiguration agentConfiguration,
-			double averageRecyclingIntervalHours)
+			AgentConfiguration agentConfiguration)
 		{
 			if (agentConfiguration.Ports == null || agentConfiguration.Ports.Count == 0)
 			{
@@ -150,7 +149,7 @@ namespace Quaestor.MiniCluster
 				{
 					EnvironmentVariables = agentConfiguration.EnvironmentVariables,
 					ClusterShutdownAction = agentConfiguration.ClusterShutdownAction,
-					RecyclingIntervalHours = GetRandomPlusMinus(averageRecyclingIntervalHours, 10)
+					RecyclingIntervalHours = GetRandomizedRecyclingInterval(agentConfiguration)
 				};
 
 				if (agentConfiguration.ServiceNames != null)
@@ -161,12 +160,27 @@ namespace Quaestor.MiniCluster
 					}
 				}
 
-				_logger.LogDebug(
-					"Agent has been configured with recycling interval {recyclingHours}. Process details: {process}",
+				_logger.LogInformation(
+					"Agent has been configured with recycling interval {recyclingHours:F3}h. Process details: {process}",
 					managedProcess.RecyclingIntervalHours, managedProcess);
 
 				yield return managedProcess;
 			}
+		}
+
+		private static double GetRandomizedRecyclingInterval(
+			[NotNull] AgentConfiguration agentConfiguration)
+		{
+			double averageRecyclingIntervalHours = agentConfiguration.RecyclingIntervalHours;
+
+			if (averageRecyclingIntervalHours <= 0)
+			{
+				return 0;
+			}
+
+			double result = GetRandomPlusMinus(averageRecyclingIntervalHours, 10);
+
+			return result;
 		}
 
 		/// <summary>
@@ -178,7 +192,8 @@ namespace Quaestor.MiniCluster
 		/// <exception cref="NotImplementedException"></exception>
 		private static double GetRandomPlusMinus(double average, double plusMinusPercent)
 		{
-			double variation = _random.NextDouble() * plusMinusPercent * 2 - plusMinusPercent;
+			double plusMinusAbsolute = average * plusMinusPercent / 100;
+			double variation = _random.NextDouble() * plusMinusAbsolute * 2 - plusMinusAbsolute;
 
 			return average + variation;
 		}
