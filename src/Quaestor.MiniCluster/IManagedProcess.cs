@@ -72,6 +72,6 @@ namespace Quaestor.MiniCluster
 		///     Gets the number of currently ongoing requests inside this process.
 		/// </summary>
 		/// <returns></returns>
-		Task<int> GetOngoingRequestCountAsync();
+		Task<int?> GetOngoingRequestCountAsync();
 	}
 }

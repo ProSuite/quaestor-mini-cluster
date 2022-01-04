@@ -164,7 +164,7 @@ namespace Quaestor.MiniCluster
 		{
 			_logger.LogInformation("The process {process} is due for recycling.", managedProcess);
 
-			int ongoingRequests = await managedProcess.GetOngoingRequestCountAsync();
+			int? ongoingRequests = await managedProcess.GetOngoingRequestCountAsync();
 
 			if (ongoingRequests > 0)
 			{
@@ -178,7 +178,7 @@ namespace Quaestor.MiniCluster
 			await ManagedProcessUtils.ShutDownAsync(managedProcess, serviceRegistrar,
 				TimeSpan.Zero);
 
-			// However, the advantage of killing is that we can re-start it straigh away:
+			// However, the advantage of killing is that we can re-start it straight away:
 			bool success = await managedProcess.StartAsync();
 
 			if (success &&

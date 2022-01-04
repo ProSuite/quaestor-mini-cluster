@@ -111,7 +111,7 @@ namespace Quaestor.MiniCluster
 		{
 			get
 			{
-				if (RecyclingIntervalHours == 0)
+				if (RecyclingIntervalHours <= 0)
 				{
 					return false;
 				}
@@ -138,7 +138,7 @@ namespace Quaestor.MiniCluster
 			return await AreServicesHealthyAsync();
 		}
 
-		public async Task<int> GetOngoingRequestCountAsync()
+		public async Task<int?> GetOngoingRequestCountAsync()
 		{
 			if (Port < 0)
 			{
@@ -152,34 +152,6 @@ namespace Quaestor.MiniCluster
 			}
 
 			return await GetOngoingRequestCountAsync(Channel);
-		}
-
-		private async Task<int> GetOngoingRequestCountAsync(Channel channel)
-		{
-			int result = 0;
-			foreach (string serviceName in ServiceNames)
-			{
-				result += await GetOngoingRequestCountAsync(channel, serviceName);
-			}
-
-			return result;
-		}
-
-		private static async Task<int> GetOngoingRequestCountAsync([NotNull] Channel channel,
-			[NotNull] string serviceName)
-		{
-			var loadRequest = new LoadReportRequest
-			{
-				ServiceName = serviceName
-			};
-
-			LoadReportingGrpc.LoadReportingGrpcClient loadClient =
-				new LoadReportingGrpc.LoadReportingGrpcClient(channel);
-
-			LoadReportResponse loadReportResponse =
-				await loadClient.ReportLoadAsync(loadRequest);
-
-			return loadReportResponse.ServerStats.CurrentRequests;
 		}
 
 		public async Task<bool> StartAsync()
@@ -427,6 +399,51 @@ namespace Quaestor.MiniCluster
 
 			return executablePath.StartsWith(".") ||
 			       executablePath.StartsWith(Path.DirectorySeparatorChar.ToString());
+		}
+
+		private async Task<int?> GetOngoingRequestCountAsync(Channel channel)
+		{
+			int? result = 0;
+			foreach (string serviceName in ServiceNames)
+			{
+				int? requestCount = await GetOngoingRequestCountAsync(channel, serviceName);
+
+				if (requestCount != null)
+				{
+					result += requestCount.Value;
+				}
+			}
+
+			return result;
+		}
+
+		private async Task<int?> GetOngoingRequestCountAsync([NotNull] Channel channel,
+		                                                     [NotNull] string serviceName)
+		{
+			try
+			{
+				_logger.LogDebug("Getting load report from {serviceName} at {channel}...",
+					serviceName, channel);
+
+				var loadRequest = new LoadReportRequest
+				{
+					ServiceName = serviceName
+				};
+
+				LoadReportingGrpc.LoadReportingGrpcClient loadClient =
+					new LoadReportingGrpc.LoadReportingGrpcClient(channel);
+
+				LoadReportResponse loadReportResponse =
+					await loadClient.ReportLoadAsync(loadRequest);
+
+				return loadReportResponse.ServerStats.CurrentRequests;
+			}
+			catch (Exception e)
+			{
+				_logger.LogDebug(e, "Error getting load report from {serviceName}: {errorMessage}",
+					serviceName, e.Message);
+				return null;
+			}
 		}
 
 		private void EnsureDead(Process process)
