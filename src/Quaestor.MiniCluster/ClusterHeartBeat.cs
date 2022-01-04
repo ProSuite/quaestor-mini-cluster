@@ -149,13 +149,13 @@ namespace Quaestor.MiniCluster
 
 						await TryRecycle(managedProcess, serviceRegistrar);
 					}
-
-					await Task.Delay(_cluster.HeartBeatInterval);
 				}
 				catch (Exception exception)
 				{
 					_logger.LogError(exception, "Heartbeat loop failed");
 				}
+
+				await Task.Delay(_cluster.HeartBeatInterval);
 			}
 		}
 
