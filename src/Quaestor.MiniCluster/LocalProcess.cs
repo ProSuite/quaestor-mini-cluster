@@ -101,6 +101,8 @@ namespace Quaestor.MiniCluster
 		/// </summary>
 		public bool MonitoringSuspended { get; set; }
 
+		public double StartupWaitSeconds { get; set; } = 8;
+
 		public int StartupFailureCount { get; set; }
 
 		public bool IsKnownRunning => !Process?.HasExited ?? false;
@@ -188,11 +190,13 @@ namespace Quaestor.MiniCluster
 				Process.BeginOutputReadLine();
 				Process.BeginErrorReadLine();
 
-				// Configurable? Or don't even wait for the health check and only start it?
-				TimeSpan startupTimeAverage = TimeSpan.FromSeconds(8);
+				TimeSpan startupWaitTime = TimeSpan.FromSeconds(StartupWaitSeconds);
+
+				_logger.LogDebug("Configured startup wait time is {startupWaitSeconds}s...",
+					StartupWaitSeconds);
 
 				// Let the process start the services...
-				await Task.Delay(startupTimeAverage);
+				await Task.Delay(startupWaitTime);
 
 				bool healthy = await IsServingAsync();
 

@@ -94,6 +94,9 @@ agents:
     # The list of services that respond to health check requests
     serviceNames:
     - Worker
+    # The time in seconds to wait after the startup before the first health check is perfomed
+    # Default: 8 seconds. Increase this value for slow-starting processes (such as etcd)
+    startupWaitSeconds: 8
     # The average process recycling interval in hours. Processes are only recycled if they are
     # idle. The specified interval will be randomly varied by +-10% to disperse recycling times 
     # and maximize availability. 0 (or not specified) means no process recycling will take place.
@@ -128,6 +131,8 @@ agents:
 #    # --config-file C:\data\git\quaestor-mini-cluster\build\output\etcd_conf.yml
 #    commandLineArguments:
 #    processCount: 1
+#    # etcd needs a peer to start being healthy. Make sure to start its peer within this time:
+#    startupWaitSeconds: 120
 #    # Leave it running, other nodes might rely on it
 #    clusterShutdownAction: None
 #    hostName: 127.0.0.1

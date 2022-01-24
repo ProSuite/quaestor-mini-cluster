@@ -80,5 +80,13 @@ namespace Quaestor.Environment
 		///     Otherwise the service will be killed and restarted immediately.
 		/// </summary>
 		public double RecyclingIntervalHours { get; set; }
+
+		/// <summary>
+		///     The number of seconds to wait after the process was started until its health
+		///     is checked.
+		///     This could be useful if some processes take a long time to settle, or in the
+		///     case of etcd, require a peer to be started also to initiate their exchanges.
+		/// </summary>
+		public double StartupWaitSeconds { get; set; }
 	}
 }
