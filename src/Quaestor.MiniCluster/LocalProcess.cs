@@ -127,6 +127,13 @@ namespace Quaestor.MiniCluster
 
 		public async Task<bool> IsServingAsync()
 		{
+			const string alwaysHealthyEnvVar = "QUAESTOR_ASSUME_PROCESS_ALWAYS_HEALTHY";
+
+			if (GetBooleanEnvironmentVariableValue(alwaysHealthyEnvVar))
+			{
+				return IsKnownRunning;
+			}
+
 			if (Port < 0)
 			{
 				// Avoid waiting for the timeout of the health check, if possible.
@@ -469,6 +476,26 @@ namespace Quaestor.MiniCluster
 			{
 				_logger.LogWarning(e, "Error killing the started process {process}", process);
 			}
+		}
+
+		private bool GetBooleanEnvironmentVariableValue(string environmentVariableName)
+		{
+			string assumeHealthy =
+				System.Environment.GetEnvironmentVariable(environmentVariableName);
+
+			if (string.IsNullOrEmpty(assumeHealthy))
+			{
+				// Not very logical because the env vars are meant for the actual child process.
+				// However, for testing this option is easier to configure and more flexible.
+				EnvironmentVariables?.TryGetValue(environmentVariableName, out assumeHealthy);
+			}
+
+			if (string.IsNullOrEmpty(assumeHealthy))
+			{
+				return false;
+			}
+
+			return assumeHealthy.ToUpper() == "TRUE";
 		}
 	}
 }
