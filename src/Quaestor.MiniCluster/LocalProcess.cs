@@ -21,6 +21,7 @@ namespace Quaestor.MiniCluster
 	public class LocalProcess : IManagedProcess, IServerProcess
 	{
 		private const string _localhost = "127.0.0.1";
+		private const double _defaultStartupWait = 8;
 
 		private readonly ILogger _logger = Log.CreateLogger<LocalProcess>();
 
@@ -101,7 +102,7 @@ namespace Quaestor.MiniCluster
 		/// </summary>
 		public bool MonitoringSuspended { get; set; }
 
-		public double StartupWaitSeconds { get; set; } = 8;
+		public double StartupWaitSeconds { get; set; } = _defaultStartupWait;
 
 		public int StartupFailureCount { get; set; }
 
@@ -190,10 +191,13 @@ namespace Quaestor.MiniCluster
 				Process.BeginOutputReadLine();
 				Process.BeginErrorReadLine();
 
-				TimeSpan startupWaitTime = TimeSpan.FromSeconds(StartupWaitSeconds);
+				double startupWait =
+					StartupWaitSeconds == 0 ? _defaultStartupWait : StartupWaitSeconds;
+
+				TimeSpan startupWaitTime = TimeSpan.FromSeconds(startupWait);
 
 				_logger.LogDebug("Configured startup wait time is {startupWaitSeconds}s...",
-					StartupWaitSeconds);
+					startupWait);
 
 				// Let the process start the services...
 				await Task.Delay(startupWaitTime);
