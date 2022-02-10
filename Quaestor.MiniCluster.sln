@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31105.61
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{918331E4-8260-40B7-AF84-D1AFDE7C82A0}"
 EndProject
@@ -39,6 +39,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.ServiceDiscovery", "src\Quaestor.ServiceDiscovery\Quaestor.ServiceDiscovery.csproj", "{8624A6AD-24B5-4DDC-A56C-E5E1E8ED0182}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Console", "src\Quaestor.Console\Quaestor.Console.csproj", "{8D593B3A-6919-4197-A266-54E2A5E85B7C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.Utilities.Tests", "tests\Quaestor.Utilities.Tests\Quaestor.Utilities.Tests.csproj", "{3B67F974-2724-454C-8932-FE0757CCAC73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -98,6 +100,10 @@ Global
 		{8D593B3A-6919-4197-A266-54E2A5E85B7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D593B3A-6919-4197-A266-54E2A5E85B7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D593B3A-6919-4197-A266-54E2A5E85B7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B67F974-2724-454C-8932-FE0757CCAC73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B67F974-2724-454C-8932-FE0757CCAC73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B67F974-2724-454C-8932-FE0757CCAC73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B67F974-2724-454C-8932-FE0757CCAC73}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -117,6 +123,7 @@ Global
 		{C74F78B7-1A46-4E9D-BA59-9C2C1F3B9D1D} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 		{8624A6AD-24B5-4DDC-A56C-E5E1E8ED0182} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{8D593B3A-6919-4197-A266-54E2A5E85B7C} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{3B67F974-2724-454C-8932-FE0757CCAC73} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D4A5BDA-D4FC-4BDA-98A4-6C2669B5FFC0}
