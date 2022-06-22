@@ -349,3 +349,19 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+## Python
+**/EsriDE.ProSuite.QA.Tests.Python/venv
+**/.idea/
+
+# More python files
+dist/
+develop-eggs/
+eggs/
+.eggs/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+**/docs/build/
