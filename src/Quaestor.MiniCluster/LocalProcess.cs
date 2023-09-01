@@ -187,9 +187,13 @@ namespace Quaestor.MiniCluster
 
 				executablePath = GetActualExePath();
 
+				string argumentList = commandLineArgs == null
+					? "without parameters"
+					: $"with parameters {commandLineArgs}";
+
 				_logger.LogInformation(
-					"Starting {executablePath} with parameters {commandLineArgs}...",
-					executablePath, commandLineArgs);
+					"Starting {executablePath} {argumentList}...",
+					executablePath, argumentList);
 
 				Process = ProcessUtils.StartProcess(executablePath, commandLineArgs,
 					false, true, EnvironmentVariables);
@@ -291,7 +295,7 @@ namespace Quaestor.MiniCluster
 				return true;
 			if (obj.GetType() != GetType())
 				return false;
-			return Equals((LocalProcess) obj);
+			return Equals((LocalProcess)obj);
 		}
 
 		public override int GetHashCode()

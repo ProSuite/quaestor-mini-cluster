@@ -175,8 +175,8 @@ namespace Quaestor.LoadBalancing
 			return server;
 		}
 
-		private void AddServices(ServiceRegistry toServiceRegistry,
-		                         List<AgentConfiguration> serviceAgents)
+		private static void AddServices(ServiceRegistry toServiceRegistry,
+		                                List<AgentConfiguration> serviceAgents)
 		{
 			foreach (AgentConfiguration serviceAgent in serviceAgents)
 			{
@@ -189,7 +189,7 @@ namespace Quaestor.LoadBalancing
 				{
 					_logger.LogWarning(
 						"Agent {agentName} has no ports defined (using ephemeral ports). " +
-						"Services are not added to service registry");
+						"Services are not added to service registry", serviceAgent.AgentType);
 				}
 
 				foreach (int port in ports)
