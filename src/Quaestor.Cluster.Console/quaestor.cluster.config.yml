@@ -19,7 +19,7 @@ clusterConfig:
   memberMaxStartupRetries: 25
 
 # List of agents that are managed by the cluster. Only local processes can be managed.
-# All agents are started by the cluster and checked for health during the heart beat.
+# All agents are started by the cluster (in descending order) and checked for health during the heart beat.
 # Some well-known agent types are:
 # KeyValueStore (see below for an example): Etcd key-value store to be used as service registry
 # Worker: Agents to be used in a local in-memory key-value store, in case no KeyValueStore agent
@@ -52,7 +52,9 @@ agents:
     # The list of services that respond to health check requests
     serviceNames:
     - Worker
-    # The time in seconds to wait after the startup before the first health check is perfomed
+    # The time in seconds to wait after the startup. This can be used to orchestrate the start
+    # sequence of the various agents, in case they have interdependencies. No health check is
+    # performed during the startup wait period.
     # Default: 8 seconds. Increase this value for slow-starting processes (such as etcd)
     startupWaitSeconds: 8
     # The average process recycling interval in hours. Processes are only recycled if they are
