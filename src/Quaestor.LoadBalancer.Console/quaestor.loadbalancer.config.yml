@@ -1,0 +1,74 @@
+# Configuration file for quaestor-loadbalancer console application
+# This file will be searched in the directory provided by the --configDir command line option
+# If --configDir is not specified it is expected in the current directory.
+#
+
+# --------------------------------------------------------
+# Configuration for service discovery / load balancer
+# However, the key-value store used by the service registry is determined by the 
+# configuration below:
+# - An etcd based, distributed key-value store is used if an agent of type KeyValueStore is defined.
+# - Alternatively, a process-local, in-memory key-value store is configured using all Worker agents.
+loadBalancerConfig:
+
+  # The host name. Note that in case TLS is used (i.e. a certificate is specified) this must be
+  # identical to the certificate's subject alternative name.
+  hostName: localhost
+
+  # The port.
+  port: 5150
+  
+  # The server certificate to be used for transport security (SSL/TLS). Specify the server certificate 
+  # subject or thumbprint from the certificate store (Local Computer). Note that the certificate's 
+  # private key must be accessible to this executable, unless the --key parameter is also specified. 
+  # Alternatively this can be a PEM file containing the certificate chain (including the root 
+  # certificate shared with the client).
+  # Troubleshooting: If the specified thumbprint of the form 021f85bc637e33df8d8b1583ea2058e92c73335d
+  # cannot be found the process probably must be run with elevated privileges. This is necessary to
+  # extract the private key from the certificate file.
+  certificate:
+  
+  # The private key PEM file (to remain on the server). If not specified and the certificate found in 
+  # the store has a private exportable key the private key will be extracted from the certificate.
+  privateKeyFile:
+
+  # Enforce mutual authentication for transport layer security (SSL/TLS).
+  enforceMutualTls: false
+
+  # The timeout in seconds that is waited for when checking an individual worker service.
+  # It is used both for checking health and getting the load report. If the worker service does not
+  # respond within this time frame, it will be ignored.
+  serviceResponseTimeoutSeconds: 2
+
+  # The time a service, that has just been returned to a requestor, remains in the least-recently-used
+  # cache which results in a low priority for immediate re-use. This is used to avoid race conditions
+  # if two clients request a service location at the very same time. It has the effect of a round-robin
+  # secondary balancing mechanism.
+  recentlyUsedTimeoutSeconds: 5
+
+# KeyValueStore (see below for an example): Etcd key-value store to be used as service registry
+# Worker: Agents to be used in a local in-memory key-value store, in case no KeyValueStore agent
+#         has been defined.
+agents:
+    # Example for a local, in-memory key-value store to be used by the service discovery. 
+    # Remove this section to use a etcd-based, distributed key-value store.
+  - agentType: Worker
+    # The host name to be used for health-checks and service discovery by the LoadBalancer
+    hostName: localhost
+    # Whether transport layer security (SSL/TLS) is used by the server.
+    useTLS: false
+    # The list of ports (must correspond with the processCount from above). If empty, ephemeral
+    # ports are used.
+    ports: [ 5161, 5162, 5163, 5164 ]
+    # The list of services that respond to health check requests
+    serviceNames:
+    - Worker
+
+  # Example for an etcd-based, distributed key-value store to be used by the service discovery. 
+  # Remove this section to use a local in-memory key-value store containing just the Worker agents.
+  - agentType: KeyValueStore
+    hostName: 127.0.0.1
+    useTLS: false
+    # The official etcd default port for client requests is 2379
+    ports:
+    - 2379

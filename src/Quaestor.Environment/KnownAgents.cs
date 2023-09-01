@@ -14,6 +14,7 @@ namespace Quaestor.Environment
 
 		public static void ConfigureAgents(IConfiguration configuration)
 		{
+			// TODO: Directly read list (new config format)
 			Dictionary<string, AgentConfiguration> dictionary =
 				configuration.GetSection(_agentSectionConfigKey)
 					.Get<Dictionary<string, AgentConfiguration>>();
@@ -27,7 +28,7 @@ namespace Quaestor.Environment
 			List<AgentConfiguration> agentConfigs =
 				dictionary.Select(kvp =>
 				{
-					kvp.Value.AgentType = kvp.Key;
+					kvp.Value.AgentType = kvp.Value.AgentType ?? kvp.Key;
 					return kvp.Value;
 				}).ToList();
 
@@ -36,6 +37,7 @@ namespace Quaestor.Environment
 
 		public static List<AgentConfiguration> Configure(IConfiguration configuration)
 		{
+			// TODO: Directly read list (new config format)
 			Dictionary<string, AgentConfiguration> dictionary =
 				configuration.GetSection(_agentSectionConfigKey)
 					.Get<Dictionary<string, AgentConfiguration>>();
@@ -49,7 +51,7 @@ namespace Quaestor.Environment
 			List<AgentConfiguration> agentConfigs =
 				dictionary.Select(kvp =>
 				{
-					kvp.Value.AgentType = kvp.Key;
+					kvp.Value.AgentType = kvp.Value.AgentType ?? kvp.Key;
 					return kvp.Value;
 				}).ToList();
 

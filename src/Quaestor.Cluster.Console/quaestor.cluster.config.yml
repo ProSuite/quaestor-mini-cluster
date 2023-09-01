@@ -1,0 +1,103 @@
+# Configuration file for quaestor-cluster console application
+# This file will be searched in the directory provided by the --configDir command line option
+# If --configDir is not specified it is expected in the current directory.
+#
+
+# --------------------------------------------------------
+# Configuration section for the cluster management mode.
+# # This section is relevant if quaestor is started with the 'cluster' option
+clusterConfig:
+  # The cluster name (global scope, primarily for display purposes).
+  name: example_cluster
+  # The heart beat interval in seconds.
+  heartBeatIntervalSeconds: 30
+  # The time-out for the health check performed on each agent during the heart beat
+  memberResponseTimeOutSeconds: 20
+  # The time-out for an agent shut-down in case it is not healthy (NOT IMPLEMENTED for local process)
+  memberMaxShutdownTimeSeconds: 0
+  # The number of times an agent re-start is attempted in case it is unhealthy or not running 
+  memberMaxStartupRetries: 25
+
+# List of agents that are managed by the cluster. Only local processes can be managed.
+# All agents are started by the cluster and checked for health during the heart beat.
+# Some well-known agent types are:
+# KeyValueStore (see below for an example): Etcd key-value store to be used as service registry
+# Worker: Agents to be used in a local in-memory key-value store, in case no KeyValueStore agent
+#         has been defined.
+# However, any other agent type can be defined.
+agents:
+    # The type (name) of the agent.
+  - agentType: Worker
+    # The (absolute or relative) path to the executable
+    executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net6.0\WorkerProcess.exe
+    # The command line arguments. {HostName} and {Port} will be replaced by the respective values 
+    # defined below.
+    commandLineArguments: "{Port} 100"
+    # The number of processes to be started. Typically the port list (see below) contains the same 
+    # number of items.
+    processCount: 4
+    # The action to be performed on each member if the cluster is shut down. Currently valid 
+    # shutdown actions: {None, Kill}
+    clusterShutdownAction: Kill
+    # The dictionary of {name: value} pairs that should be added as environment variables
+    environmentVariables:
+      QUAESTOR_WORKER_EXIT_WHEN_UNHEALTHY: false
+    # The host name to be used for health-checks and service discovery by the LoadBalancer
+    hostName: localhost
+    # Whether transport layer security (SSL/TLS) is used by the server.
+    useTLS: false
+    # The list of ports (must correspond with the processCount from above). If empty, ephemeral
+    # ports are used.
+    ports: [ 5161, 5162, 5163, 5164 ]
+    # The list of services that respond to health check requests
+    serviceNames:
+    - Worker
+    # The time in seconds to wait after the startup before the first health check is perfomed
+    # Default: 8 seconds. Increase this value for slow-starting processes (such as etcd)
+    startupWaitSeconds: 8
+    # The average process recycling interval in hours. Processes are only recycled if they are
+    # idle. The specified interval will be randomly varied by +-10% to disperse recycling times 
+    # and maximize availability. 0 (or not specified) means no process recycling will take place.
+    # NOTE: to determine if a process is idle, its services must implement load reporting.
+    #       otherwise the service will be killed and restarted immedidately.
+    recyclingIntervalHours: 24
+
+  - agentType: LoadBalancer
+    executablePath: quaestor-loadbalancer.exe
+    commandLineArguments:
+    processCount: 1
+    clusterShutdownAction: Kill
+    # The dictionary of key: value pairs that should be added as environment variables
+    environmentVariables:
+      QUAESTOR_LOGFILE_SUFFIX: Load_Balancing
+      TEMP: C:\Temp
+    hostName: localhost
+    useTLS: false
+    ports:
+    - 5150
+    serviceNames:
+    - ServiceDiscoveryGrpc
+    recyclingIntervalHours: 0
+
+#  # Example for an etcd-based, distributed keyvalue store to be used by the service discovery. 
+#  # Remove this section to use a local in-memory key-value store containing just the Worker agents.
+#  - agentType: KeyValueStore
+#    # Executable: https://github.com/etcd-io/etcd/releases/ (v. 3.4 or higher, add the install dir
+#    # to the path environment variable or define the fully qualified location)
+#    executablePath: etcd.exe
+#    # see https://github.com/etcd-io/etcd/blob/release-3.4/etcd.conf.yml.sample
+#    # --config-file C:\data\git\quaestor-mini-cluster\build\output\etcd_conf.yml
+#    commandLineArguments:
+#    processCount: 1
+#    # etcd needs a peer to start being healthy. Make sure to start its peer within this time:
+#    startupWaitSeconds: 120
+#    # Leave it running, other nodes might rely on it
+#    clusterShutdownAction: None
+#    hostName: 127.0.0.1
+#    useTLS: false
+#    # The official etcd default port for client requests is 2379
+#    ports:
+#    - 2379
+#    # Etcd's health check implementation does not respond for specific service names, but it
+#    # supports health check requests with empty service names:
+#    serviceNames: []
