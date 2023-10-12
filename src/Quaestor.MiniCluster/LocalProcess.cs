@@ -125,6 +125,8 @@ namespace Quaestor.MiniCluster
 			}
 		}
 
+		public bool ExcludeFromServiceRegistry { get; set; }
+
 		public async Task<bool> IsServingAsync()
 		{
 			const string alwaysHealthyEnvVar = "QUAESTOR_ASSUME_PROCESS_ALWAYS_HEALTHY";

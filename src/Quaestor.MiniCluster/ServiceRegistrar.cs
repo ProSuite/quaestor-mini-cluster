@@ -13,6 +13,27 @@ namespace Quaestor.MiniCluster
 		}
 
 		/// <summary>
+		///     Registers the services of the specified server process if they are not excluded
+		///     from the service registry.
+		///     This method is idempotent and can be called multiple times for the same process.
+		/// </summary>
+		/// <param name="managedProcess"></param>
+		public void Register(IManagedProcess managedProcess)
+		{
+			if (managedProcess.ExcludeFromServiceRegistry)
+			{
+				return;
+			}
+
+			if (!(managedProcess is IServerProcess serverProcess))
+			{
+				return;
+			}
+
+			Ensure(serverProcess);
+		}
+
+		/// <summary>
 		///     Ensures that the services of the specified server process are registered.
 		///     This method is idempotent and can be called multiple times for the same process.
 		/// </summary>

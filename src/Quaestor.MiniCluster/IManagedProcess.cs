@@ -44,6 +44,12 @@ namespace Quaestor.MiniCluster
 		bool IsDueForRecycling { get; }
 
 		/// <summary>
+		///     Whether the services of this agent shall be excluded from the service registry
+		///     of the load balancer.
+		/// </summary>
+		bool ExcludeFromServiceRegistry { get; }
+
+		/// <summary>
 		///     Whether the process is serving as per GRPC health check protocol. If false is returned,
 		///     the process can be re-started by the cluster.
 		/// </summary>

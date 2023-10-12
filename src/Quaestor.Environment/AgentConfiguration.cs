@@ -88,5 +88,11 @@ namespace Quaestor.Environment
 		///     case of etcd, require a peer to be started also to initiate their exchanges.
 		/// </summary>
 		public double StartupWaitSeconds { get; set; }
+
+		/// <summary>
+		///     Whether the services of this agent shall be excluded from the service registry
+		///     of the load balancer.
+		/// </summary>
+		public bool ExcludeFromServiceRegistry { get; set; }
 	}
 }

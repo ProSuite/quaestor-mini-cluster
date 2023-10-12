@@ -199,6 +199,14 @@ namespace Quaestor.LoadBalancing
 						continue;
 					}
 
+					if (serviceAgent.ExcludeFromServiceRegistry)
+					{
+						_logger.LogInformation(
+							"Excluded from the service registry: {services} on {host}:{port}",
+							serviceAgent.ServiceNames, serviceAgent.HostName, port);
+						continue;
+					}
+
 					_logger.LogInformation("Adding services: {services} on {host}:{port}",
 						serviceAgent.ServiceNames, serviceAgent.HostName, port);
 

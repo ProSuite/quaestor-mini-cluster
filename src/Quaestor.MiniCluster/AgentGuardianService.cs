@@ -150,7 +150,8 @@ namespace Quaestor.MiniCluster
 					EnvironmentVariables = agentConfiguration.EnvironmentVariables,
 					ClusterShutdownAction = agentConfiguration.ClusterShutdownAction,
 					RecyclingIntervalHours = GetRandomizedRecyclingInterval(agentConfiguration),
-					StartupWaitSeconds = agentConfiguration.StartupWaitSeconds
+					StartupWaitSeconds = agentConfiguration.StartupWaitSeconds,
+					ExcludeFromServiceRegistry = agentConfiguration.ExcludeFromServiceRegistry
 				};
 
 				if (agentConfiguration.ServiceNames != null)

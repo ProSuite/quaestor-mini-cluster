@@ -98,7 +98,7 @@ namespace Quaestor.MiniCluster
 				if (started)
 				{
 					// ... and try making contact
-					IServerProcess serverProcess = (IServerProcess) kvsProcess;
+					IServerProcess serverProcess = (IServerProcess)kvsProcess;
 
 					var keyValueStore = await EtcdKeyValueStore.TryConnectAsync(
 						serverProcess.HostName, serverProcess.Port, serverProcess.UseTls);
@@ -190,9 +190,9 @@ namespace Quaestor.MiniCluster
 			{
 				process.StartupFailureCount++;
 			}
-			else if (process is IServerProcess serverProcess)
+			else
 			{
-				ServiceRegistrar?.Ensure(serverProcess);
+				ServiceRegistrar?.Register(process);
 			}
 
 			return success;

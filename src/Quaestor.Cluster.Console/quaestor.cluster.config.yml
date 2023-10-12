@@ -85,6 +85,7 @@ agents:
     serviceNames:
     - ServiceDiscoveryGrpc
     recyclingIntervalHours: 0
+    excludeFromServiceRegistry: false
 
 #  # Example for an etcd-based, distributed key-value store to be used by the service discovery of
 #  # quaestor-loadbalancer.

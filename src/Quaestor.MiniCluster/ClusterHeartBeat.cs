@@ -130,11 +130,8 @@ namespace Quaestor.MiniCluster
 
 						if (await CheckHeartBeatAsync(member))
 						{
-							if (member is IServerProcess serverProcess)
-							{
-								// Just to be save - in case they have been started previously.
-								_cluster.ServiceRegistrar?.Ensure(serverProcess);
-							}
+							// Just to be save - in case they have been started previously.
+							_cluster.ServiceRegistrar?.Register(member);
 						}
 					}
 
@@ -181,10 +178,9 @@ namespace Quaestor.MiniCluster
 			// However, the advantage of killing is that we can re-start it straight away:
 			bool success = await managedProcess.StartAsync();
 
-			if (success &&
-			    managedProcess is IServerProcess serverProcess)
+			if (success)
 			{
-				serviceRegistrar?.Ensure(serverProcess);
+				serviceRegistrar?.Register(managedProcess);
 			}
 
 			return success;

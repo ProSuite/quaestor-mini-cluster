@@ -63,6 +63,8 @@ agents:
     # The list of services that respond to health check requests
     serviceNames:
     - Worker
+    excludeFromServiceRegistry: false
+
 
   # Example for an etcd-based, distributed key-value store to be used by the service discovery. 
   # Remove this section to use a local in-memory key-value store containing just the Worker agents.
