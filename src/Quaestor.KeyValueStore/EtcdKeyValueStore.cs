@@ -161,7 +161,14 @@ namespace Quaestor.KeyValueStore
 		{
 			DateTime? deadline = GetTimeOut();
 
-			_etcdClient.Delete(key, null, deadline);
+			try
+			{
+				_etcdClient.Delete(key, null, deadline);
+			}
+			catch (Exception e)
+			{
+				_logger.LogWarning(e, "Error deleting key from key-value store.");
+			}
 		}
 
 		private DateTime? GetTimeOut()
