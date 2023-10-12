@@ -13,7 +13,7 @@ loadBalancerConfig:
 
   # The host name. Note that in case TLS is used (i.e. a certificate is specified) this must be
   # identical to the certificate's subject alternative name.
-  hostName: localhost
+  hostName: 127.0.0.1
 
   # The port.
   port: 5150
@@ -66,6 +66,8 @@ agents:
 
   # Example for an etcd-based, distributed key-value store to be used by the service discovery. 
   # Remove this section to use a local in-memory key-value store containing just the Worker agents.
+  # Typically the etcd process is managed by quaestor-cluster. If no distributed service registry
+  # is found at the specified host/port, the above Worker agents are used as fall-back.
   - agentType: KeyValueStore
     hostName: 127.0.0.1
     useTLS: false

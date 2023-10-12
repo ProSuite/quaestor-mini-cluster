@@ -1,11 +1,10 @@
-# Configuration file for quaestor-cluster console application
+# Configuration file for the quaestor-cluster console application
 # This file will be searched in the directory provided by the --configDir command line option
 # If --configDir is not specified it is expected in the current directory.
 #
 
 # --------------------------------------------------------
-# Configuration section for the cluster management mode.
-# # This section is relevant if quaestor is started with the 'cluster' option
+# Configuration section for the cluster management.
 clusterConfig:
   # The cluster name (global scope, primarily for display purposes).
   name: example_cluster
@@ -42,12 +41,18 @@ agents:
     # The dictionary of {name: value} pairs that should be added as environment variables
     environmentVariables:
       QUAESTOR_WORKER_EXIT_WHEN_UNHEALTHY: false
-    # The host name to be used for health-checks and service discovery by the LoadBalancer
+    # The host name to be used for health-checks and service discovery by the LoadBalancer.
+    # Important: Make sure the services are started using the host name specified here, as this is 
+    # the address the cluster contacts the individual agents for health checking. Typically this is 
+    # achieved by using the {HostName} place holder in the commandLineArguments section.
     hostName: localhost
     # Whether transport layer security (SSL/TLS) is used by the server.
     useTLS: false
     # The list of ports (must correspond with the processCount from above). If empty, ephemeral
-    # ports are used.
+    # ports are used. Only agents with ports specified here are added to the service registry.
+    # Important: Make sure the services are started using the ports specified here, as this is the
+    # address the cluster contacts the individual agents for health checking. Typically this is 
+    # achieved by using the {Port} place holder in the commandLineArguments section.
     ports: [ 5161, 5162, 5163, 5164 ]
     # The list of services that respond to health check requests
     serviceNames:
@@ -73,7 +78,7 @@ agents:
     environmentVariables:
       QUAESTOR_LOGFILE_SUFFIX: Load_Balancing
       TEMP: C:\Temp
-    hostName: localhost
+    hostName: 127.0.0.1    # NOTE: QA client does not support localhost load balancers.
     useTLS: false
     ports:
     - 5150
@@ -81,7 +86,8 @@ agents:
     - ServiceDiscoveryGrpc
     recyclingIntervalHours: 0
 
-#  # Example for an etcd-based, distributed keyvalue store to be used by the service discovery. 
+#  # Example for an etcd-based, distributed key-value store to be used by the service discovery of
+#  # quaestor-loadbalancer.
 #  # Remove this section to use a local in-memory key-value store containing just the Worker agents.
 #  - agentType: KeyValueStore
 #    # Executable: https://github.com/etcd-io/etcd/releases/ (v. 3.4 or higher, add the install dir
@@ -93,7 +99,7 @@ agents:
 #    processCount: 1
 #    # etcd needs a peer to start being healthy. Make sure to start its peer within this time:
 #    startupWaitSeconds: 120
-#    # Leave it running, other nodes might rely on it
+#    # Leave it running (None), other nodes might rely on it. To Shut down:Kill
 #    clusterShutdownAction: None
 #    hostName: 127.0.0.1
 #    useTLS: false

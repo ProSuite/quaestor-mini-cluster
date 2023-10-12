@@ -108,6 +108,15 @@ $ cd .\src\Quaestor.Console\bin\Debug\net6.0
 $ quaestor load-balancer
 ```
 
+## Managing distributed processes and services
+
+If you have a setup running on multiple computers, use etcd as distributed service registry. If the cluster configuration [quaestor.cluster.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Cluster.Console/quaestor.cluster.config.yml) contains an agent called 'KeyValueStore' it is
+assumed to be an etcd instance that can be used as distributed service registry, visible from all the computers in your cluster. All configured agents are
+registered in the distributed service registry by quaestor-cluster and hence will be visible by the quaestor-loadbalancer, if the KeyValueStore is configured
+in the loadbalancer's configuration. See last entry in [quaestor.loadbalancer.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.LoadBalancer.Console/quaestor.loadbalancer.config.yml). Using a distributed service registry allows running multiple load-balancers on multiple or all machines 
+which increases the overall system availability and robustness. Clients can round-robin all available loadbalancers and use any of them because they all use
+the same distributed service registry and hence can serve all healthy service addresses.
+
 ### External monitoring with gRPCurl
 
 The load balancer service that is part of this cluster configuration can be tested with the following gRPCurl script (first download [gRPCurl](https://github.com/fullstorydev/grpcurl/releases) and make sure it is in the PATH environment variable):
