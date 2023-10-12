@@ -82,7 +82,7 @@ namespace Quaestor.Cluster.Console
 								defaultConfig);
 						}
 
-						if (File.Exists(defaultConfig))
+						if (File.Exists(envSpecificConfig))
 						{
 							_logger.LogInformation("Using configuration file: {configFile}",
 								envSpecificConfig);
