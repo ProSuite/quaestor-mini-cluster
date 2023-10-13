@@ -69,6 +69,10 @@ agents:
     #       otherwise the service will be killed and restarted immedidately.
     recyclingIntervalHours: 24
 
+    # Optionally, exclude a process from the service registry. This means that the load balancer
+    # will not serve the processes. Default: false (i.e. the services)
+    excludeFromServiceRegistry: false
+
   - agentType: LoadBalancer
     executablePath: quaestor-loadbalancer.exe
     commandLineArguments:
