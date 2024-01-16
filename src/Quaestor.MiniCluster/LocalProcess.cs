@@ -444,7 +444,7 @@ namespace Quaestor.MiniCluster
 			try
 			{
 				_logger.LogDebug("Getting load report from {serviceName} at {channel}...",
-					serviceName, channel);
+					serviceName, channel.ResolvedTarget);
 
 				var loadRequest = new LoadReportRequest
 				{

@@ -166,9 +166,15 @@ namespace Quaestor.MiniCluster
 			if (ongoingRequests > 0)
 			{
 				_logger.LogWarning(
-					"Process recycling is delayed due to one or more ongoing requests being processed.");
+					"Process recycling is delayed due {ongoingRequests} ongoing request(s) being processed.",
+					ongoingRequests);
+
 				return false;
 			}
+
+			_logger.LogDebug(
+				"The process is currently serving {ongoingRequests} requests. We will now proceed with killing it!",
+				ongoingRequests);
 
 			// TODO: Send shutdown signal (that sets unhealthy = true and then waits another few seconds before shutting down to avoid races)
 
