@@ -33,13 +33,15 @@ namespace Quaestor.KeyValueStore
 			string connectionString = "http://localhost:2379",
 			string caCert = "")
 		{
-			_logger.LogDebug("Trying to connect to distributed key-value store at {conn}...",
-				connectionString);
+			var etcdConnectTimeout = new TimeSpan(0, 15, 0);
+
+			_logger.LogDebug("Trying to connect to distributed key-value store at {conn} (Time-out is set to {timeout})...",
+				connectionString, etcdConnectTimeout);
 
 			int defaultPort = 2379;
 			EtcdClient etcdClient = new EtcdClient(connectionString, defaultPort, caCert);
 
-			var etcdStore = new EtcdKeyValueStore(etcdClient);
+			var etcdStore = new EtcdKeyValueStore(etcdClient, etcdConnectTimeout);
 
 			// Warm up:
 			bool connected = await etcdStore.ConnectAsync();

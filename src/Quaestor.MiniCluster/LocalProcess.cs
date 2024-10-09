@@ -223,7 +223,9 @@ namespace Quaestor.MiniCluster
 				}
 				else
 				{
-					_logger.LogWarning("Startup of {process} has failed", this);
+					_logger.LogWarning(
+						"Startup of {process} has failed or it is still not healthy after {startupWaitSeconds}s",
+						this, startupWait);
 				}
 
 				return healthy;
