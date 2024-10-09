@@ -116,7 +116,10 @@ namespace Quaestor.KeyValueStore
 			{
 				var statusRequest = new StatusRequest();
 
-				StatusResponse response = await _etcdClient.StatusASync(statusRequest);
+				var deadline = GetTimeOut();
+
+				StatusResponse response =
+					await _etcdClient.StatusASync(statusRequest, deadline: deadline);
 
 				_logger.LogDebug("Successfully connected to etcd: {response}", response.ToString());
 			}
@@ -180,7 +183,7 @@ namespace Quaestor.KeyValueStore
 				return null;
 			}
 
-			return DateTime.Now.Add(_timeOut.Value);
+			return DateTime.UtcNow.Add(_timeOut.Value);
 		}
 	}
 }

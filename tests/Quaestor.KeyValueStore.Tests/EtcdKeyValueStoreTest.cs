@@ -111,7 +111,8 @@ namespace Quaestor.KeyValueStore.Tests
 			EtcdClient etcdClient =
 				new EtcdClient("http://localhost:2379");
 
-			var etcdStore = new EtcdKeyValueStore(etcdClient);
+			TimeSpan? timeout2Minutes = new TimeSpan(0, 2, 0);
+			var etcdStore = new EtcdKeyValueStore(etcdClient, timeout2Minutes);
 
 			// Warm up:
 			Stopwatch watch = Stopwatch.StartNew();
