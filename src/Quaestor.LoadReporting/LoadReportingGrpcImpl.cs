@@ -59,7 +59,7 @@ namespace Quaestor.LoadReporting
 				serverStats.CurrentRequests = currentLoad.CurrentProcessCount;
 				serverStats.ServerUtilization = currentLoad.ServerUtilization;
 
-				currentLoad.Reset();
+				currentLoad.ResetReportStart();
 			}
 			catch (Exception e)
 			{

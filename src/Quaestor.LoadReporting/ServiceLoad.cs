@@ -1,41 +1,71 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Quaestor.LoadReporting
 {
+	/// <summary>
+	///     Manages the current load of a service process used by the load balancing functionality.
+	/// </summary>
 	public class ServiceLoad : IServiceLoad
 	{
 		DateTime? _lastGetCpuUsageTime;
 		private TimeSpan _lastTotalProcessorTime;
+		private int _currentProcessCount;
+		private double _knownLoadRate = -1;
 
-		public ServiceLoad(int processCapacity = -1)
+		public ServiceLoad(int processCapacity = -1,
+		                   int initialProcessCount = 0)
 		{
 			ProcessCapacity = processCapacity;
 
-			Reset();
+			ResetReportStart();
+			ResetCurrentProcessCount(initialProcessCount);
 
 			// Initialize last CPU time:
 			GetCpuUsage();
 		}
 
+		/// <summary>
+		///     The start time of the next load report.
+		/// </summary>
 		public DateTime ReportStart { get; private set; }
 
-		public double KnownLoadRate { get; set; } = -1;
-
-		public int ProcessCapacity { get; set; }
-		public int CurrentProcessCount { get; set; }
-		public double ServerUtilization { get; set; }
-
-		// ReSharper disable once UnusedMember.Global (PublicAPI)
-		public void StartRequest()
+		/// <summary>
+		///     The known load rate of the service. This method is thread-safe.
+		/// </summary>
+		public double KnownLoadRate
 		{
-			CurrentProcessCount++;
+			get => _knownLoadRate;
+			set => Interlocked.Exchange(ref _knownLoadRate, value);
 		}
 
-		// ReSharper disable once UnusedMember.Global (PublicAPI)
+		/// <summary>
+		///     The capacity of the service.
+		/// </summary>
+		public int ProcessCapacity { get; set; }
+
+		/// <summary>
+		///     The number of currently ongoing processes.
+		/// </summary>
+		public int CurrentProcessCount => _currentProcessCount;
+
+		public double ServerUtilization { get; set; }
+
+		/// <summary>
+		///     Increments <see cref="CurrentProcessCount" />. This method is thread-safe.
+		/// </summary>
+		public void StartRequest()
+		{
+			Interlocked.Increment(ref _currentProcessCount);
+		}
+
+		/// <summary>
+		///     Decrements <see cref="CurrentProcessCount" />. This method is thread-safe.
+		/// </summary>
 		public void EndRequest()
 		{
-			CurrentProcessCount--;
+			Interlocked.Decrement(ref _currentProcessCount);
 		}
 
 		public double GetCpuUsage()
@@ -69,16 +99,42 @@ namespace Quaestor.LoadReporting
 			return -1;
 		}
 
-		public void Reset()
+		/// <summary>
+		///     Resets the <see cref="ReportStart" /> date and the <see cref="CurrentProcessCount" />.
+		///     This method is thread-safe.
+		/// </summary>
+		/// <param name="initialProcessCount"></param>
+		public void Reset(int initialProcessCount = 0)
 		{
 			ReportStart = DateTime.Now;
+
+			_currentProcessCount = initialProcessCount;
+		}
+
+		/// <summary>
+		///     Resets the <see cref="ReportStart" /> time to the current time.
+		///     This method is thread-safe.
+		/// </summary>
+		public void ResetReportStart()
+		{
+			ReportStart = DateTime.Now;
+		}
+
+		/// <summary>
+		///     Resets the <see cref="CurrentProcessCount" />.
+		///     This method is thread-safe.
+		/// </summary>
+		/// <param name="count"></param>
+		public void ResetCurrentProcessCount(int count = 0)
+		{
+			Interlocked.Exchange(ref _currentProcessCount, count);
 		}
 
 		public ServiceLoad Clone()
 		{
 			return new ServiceLoad(ProcessCapacity)
 			{
-				CurrentProcessCount = CurrentProcessCount,
+				_currentProcessCount = CurrentProcessCount,
 				ServerUtilization = ServerUtilization,
 				ReportStart = ReportStart
 			};

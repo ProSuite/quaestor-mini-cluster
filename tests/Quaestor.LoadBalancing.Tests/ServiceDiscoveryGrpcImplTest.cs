@@ -44,7 +44,7 @@ namespace Quaestor.LoadBalancing.Tests
 			// Reset current load
 			foreach (ServiceLoad serviceLoad in _serviceLoadByLocation.Values)
 			{
-				serviceLoad.CurrentProcessCount = 0;
+				serviceLoad.ResetCurrentProcessCount();
 			}
 		}
 
@@ -90,7 +90,13 @@ namespace Quaestor.LoadBalancing.Tests
 			for (int port = startPort; port < startPort + _serviceCount; port++)
 			{
 				var serviceLocation = new ServiceLocation(_serviceName, hostName, port, false);
-				_serviceLoadByLocation.Remove(serviceLocation);
+
+				if (_serviceLoadByLocation.TryGetValue(serviceLocation,
+					    out ServiceLoad load))
+				{
+					load.EndRequest();
+					_serviceLoadByLocation.Remove(serviceLocation);
+				}
 
 				_serviceRegistry.EnsureRemoved(_serviceName, hostName, port, false);
 			}
@@ -181,7 +187,7 @@ namespace Quaestor.LoadBalancing.Tests
 				int ascendingRank = loadByPort.Key.Port - _startPort;
 				int descendingRank = _serviceCount - ascendingRank;
 
-				loadByPort.Value.CurrentProcessCount = descendingRank;
+				loadByPort.Value.ResetCurrentProcessCount(descendingRank);
 			}
 
 			Stopwatch watch = Stopwatch.StartNew();
@@ -262,7 +268,7 @@ namespace Quaestor.LoadBalancing.Tests
 			string firstLocationHost = serviceLocation.HostName;
 
 			// Add one load to the first machine:
-			_serviceLoadByLocation[serviceLocation].CurrentProcessCount += 1;
+			_serviceLoadByLocation[serviceLocation].StartRequest();
 
 			// The second time, thanks to machine-level cpu balancing the first port from the other
 			// machine should be returned:
@@ -285,7 +291,7 @@ namespace Quaestor.LoadBalancing.Tests
 				int ascendingRank = loadByPort.Key.Port - _startPort127001;
 				int descendingRank = _serviceCount - ascendingRank;
 
-				loadByPort.Value.CurrentProcessCount = descendingRank;
+				loadByPort.Value.ResetCurrentProcessCount(descendingRank);
 			}
 
 			Stopwatch watch = Stopwatch.StartNew();

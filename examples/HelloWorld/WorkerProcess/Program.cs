@@ -35,10 +35,8 @@ namespace WorkerProcess
 			// Use Load.StartRequest(); at the beginning
 			// and Load.StartRequest(); at the end of a request
 			// or assign a known load rate using Load.KnownLoadRate
-			Load = new ServiceLoad
+			Load = new ServiceLoad(processCapacity: 1, initialProcessCount: currentRequests)
 			{
-				ProcessCapacity = 1,
-				CurrentProcessCount = currentRequests,
 				ServerUtilization = 0.12345
 			};
 

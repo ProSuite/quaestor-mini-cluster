@@ -30,7 +30,7 @@ namespace Quaestor.LoadReporting.Tests
 			AssertCorrectReport(client, _actualLoad);
 
 			_actualLoad.ProcessCapacity = 5;
-			_actualLoad.CurrentProcessCount = 3;
+			_actualLoad.ResetCurrentProcessCount(3);
 			_actualLoad.ServerUtilization = 12.345;
 
 			// Note: The actualLoad's start time is reset on report (same instance in unit test!)
