@@ -1,6 +1,6 @@
 from quaestor.service_discovery import ServiceDiscovery
 
-HOSTNAME = 'localhost'
+HOSTNAME = 'CRASSUS'
 PORTNR = 5150
 SCOPE = 'example_cluster'
 SERVICENAME = 'QualityVerificationGrpc'
