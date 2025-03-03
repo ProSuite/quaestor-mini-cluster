@@ -11,7 +11,7 @@ The protoc compiler needs to be run from a console
 
 *command:*
 `
-python -m grpc_tools.protoc -I C:\git\quaestor-mini-cluster\src\Quaestor.ServiceDiscovery --python_out=src\loadbalancer\generated --grpc_python_out src\loadbalancer\generated C:\git\quaestor-mini-cluster\src\Quaestor.ServiceDiscovery\service_discovery.proto
+python -m grpc_tools.protoc -I C:\git\quaestor-mini-cluster\src\Quaestor.ServiceDiscovery --python_out=.\src\quaestor\generated --grpc_python_out .\src\quaestor\generated C:\git\quaestor-mini-cluster\src\Quaestor.ServiceDiscovery\service_discovery.proto
 `
 
 ## Post compile requirements
