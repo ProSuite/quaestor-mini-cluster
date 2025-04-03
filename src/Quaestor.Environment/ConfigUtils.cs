@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
@@ -61,6 +62,10 @@ namespace Quaestor.Environment
 				"{file} ({bits}) version {version} started from {path} with the following arguments: {args}",
 				processName, bits, executingAssembly.GetName().Version, path,
 				string.Join(" ", args));
+
+			string frameworkDescription = RuntimeInformation.FrameworkDescription;
+
+			_logger.LogDebug("Currently used .NET Runtime: {netRuntime}", frameworkDescription);
 		}
 
 		public static string GetLog4NetConfigPath([NotNull] string log4NetConfigFileName,
