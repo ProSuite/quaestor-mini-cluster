@@ -1,14 +1,20 @@
 
-$xml = [Xml] (Get-Content ..\src\Directory.Build.props)
-$version = [Version] $xml.Project.PropertyGroup.Version
+Param(
+	$TargetFramework = 'net6.0'
+)
 
-$outputDir = ".\output\Quaestor_" + $version
+$OutputDir = ".\output\Quaestor_${version}_for_${netVersion}"
 
-dotnet publish "..\src\Quaestor.Console\Quaestor.Console.csproj" --runtime win-x64 -c Release --no-self-contained --output $outputDir
-dotnet publish "..\src\Quaestor.Cluster.Console\Quaestor.Cluster.Console.csproj" --runtime win-x64 -c Release --no-self-contained --output $outputDir
-dotnet publish "..\src\Quaestor.LoadBalancer.Console\Quaestor.LoadBalancer.Console.csproj" --runtime win-x64 -c Release --no-self-contained --output $outputDir
+Write-Host "`n`Building Quaestor $TargetFramework to $OutputDir *****************************************************************" -ForegroundColor 'Green'
 
-Copy-Item ..\LICENSE -Destination .\output
-Copy-Item ..\README.md -Destination .\output
+$env:TargetFrameworkVersion="${TargetFramework}"
 
-pause
+Write-Host "TargetFrameworkVersion:          ${env:TargetFrameworkVersion}"
+
+dotnet publish "..\src\Quaestor.Console\Quaestor.Console.csproj" --runtime win-x64 -c Release --no-self-contained --output $OutputDir
+dotnet publish "..\src\Quaestor.Cluster.Console\Quaestor.Cluster.Console.csproj" --runtime win-x64 -c Release --no-self-contained --output $OutputDir
+dotnet publish "..\src\Quaestor.LoadBalancer.Console\Quaestor.LoadBalancer.Console.csproj" --runtime win-x64 -c Release --no-self-contained --output $OutputDir
+
+Copy-Item ..\LICENSE -Destination $OutputDir
+Copy-Item ..\README.md -Destination $OutputDir
+
