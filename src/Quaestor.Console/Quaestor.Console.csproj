@@ -1,9 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>quaestor</AssemblyName>
+
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net6.0</TargetFrameworkVersion>
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
