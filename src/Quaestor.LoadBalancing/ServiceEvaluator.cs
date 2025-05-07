@@ -134,7 +134,7 @@ namespace Quaestor.LoadBalancing
 			return result;
 		}
 
-		private static Dictionary<string, double> GetAggregatedHostUtilization(
+		private Dictionary<string, double> GetAggregatedHostUtilization(
 			[NotNull] ConcurrentBag<QualifiedService> qualifiedServiceLocations)
 		{
 			Dictionary<string, List<QualifiedService>> locationsByHost =
@@ -171,6 +171,12 @@ namespace Quaestor.LoadBalancing
 					hostLoads.Add(hostLocations.Key,
 						(double) currentRequests / totalRequestCapacity);
 				}
+			}
+
+			foreach (KeyValuePair<string, double> loadByServer in hostLoads)
+			{
+				_logger.LogDebug("Aggregated load for host {host}: {load}",
+					loadByServer.Key, loadByServer.Value);
 			}
 
 			return hostLoads;

@@ -228,6 +228,14 @@ namespace Quaestor.LoadBalancing
 			IList<QualifiedService> orderedServices =
 				serviceEvaluator.Prioritize(qualifiedServices);
 
+			_logger.LogDebug("Service locations (prioritized):");
+
+			foreach (QualifiedService service in orderedServices)
+			{
+				_logger.LogDebug("  {serviceLocation} with load {load}",
+					service.ServiceLocation, service.ServerStats);
+			}
+
 			ExcludeRecentlyUsed(orderedServices);
 
 			int maxResultCount = request.MaxCount == 0 ? -1 : request.MaxCount;
