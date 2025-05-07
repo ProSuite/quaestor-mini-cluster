@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace Quaestor.Console
 	[UsedImplicitly]
 	internal class Program
 	{
-		const string _log4NetConfigFileName = "log4net.config";
+		private const string _log4NetConfigFileName = "log4net.config";
 
 		private static ILogger<Program> _logger;
 
@@ -61,12 +62,12 @@ namespace Quaestor.Console
 		private static bool SetOptions(QuaestorLoadBalancerOptions opts)
 		{
 			_loadBalancerMode = true;
-			return SetOptions((QuaestorOptions) opts);
+			return SetOptions((QuaestorOptions)opts);
 		}
 
 		private static bool SetOptions(QuaestorClusterOptions opts)
 		{
-			return SetOptions((QuaestorOptions) opts);
+			return SetOptions((QuaestorOptions)opts);
 		}
 
 		private static bool SetOptions(QuaestorOptions opts)
@@ -94,26 +95,11 @@ namespace Quaestor.Console
 			return Host.CreateDefaultBuilder(args)
 				.UseWindowsService()
 				.ConfigureAppConfiguration(
-					(hostingContext, configuration) =>
+					(_, configuration) =>
 					{
-						configuration.Sources.Clear();
+						const string configFileName = "quaestor.config.yml";
 
-						IHostEnvironment env = hostingContext.HostingEnvironment;
-
-						_logger.LogInformation(
-							"Configuring application for hosting environment {env}",
-							env.EnvironmentName);
-
-						_logger.LogInformation("Configuration path: {rootPath}",
-							string.IsNullOrEmpty(_configDir) ? env.ContentRootPath : _configDir);
-
-						string defaultConfig = Path.Combine(_configDir, "quaestor.config.yml");
-						string envSpecificConfig = Path.Combine(_configDir,
-							$"quaestor.config.{env.EnvironmentName}.yml");
-
-						configuration
-							.AddYamlFile(defaultConfig, optional: true, reloadOnChange: true)
-							.AddYamlFile(envSpecificConfig, true, true);
+						ConfigureApplication(configuration, configFileName);
 					})
 				.ConfigureServices((hostContext, services) =>
 				{
@@ -138,70 +124,40 @@ namespace Quaestor.Console
 				});
 		}
 
-		private static void ConfigureLogging()
+		private static void ConfigureApplication(IConfigurationBuilder configuration,
+		                                        string configFileName)
 		{
-			var log4NetPath = GetLog4NetConfigPath();
+			configuration.Sources.Clear();
 
-			const string logSuffixEnvVar = "QUAESTOR_LOGFILE_SUFFIX";
+			string defaultConfig =
+				ConfigUtils.GetConfigFilePath(configFileName, _configDir,
+					out List<string> searchedDirs);
 
-			string logSuffixValue = System.Environment.GetEnvironmentVariable(logSuffixEnvVar);
-
-			if (string.IsNullOrEmpty(logSuffixValue))
+			if (defaultConfig != null)
 			{
-				string mode = _loadBalancerMode ? "load_balancer" : "cluster";
-				System.Environment.SetEnvironmentVariable(logSuffixEnvVar, mode);
+				_logger.LogInformation("Configuration path: {configPath}", defaultConfig);
+			}
+			else
+			{
+				ConfigUtils.LogMissingConfigFile(configFileName, searchedDirs);
 			}
 
-			ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-			{
-				builder.SetMinimumLevel(LogLevel.Debug);
-				if (log4NetPath != null)
-				{
-					builder.AddLog4Net(log4NetPath);
-				}
+			configuration.AddYamlFile(defaultConfig, optional: false, reloadOnChange: true);
+		}
 
-				builder.AddConsole();
+		private static void ConfigureLogging()
+		{
+			var log4NetPath =
+				ConfigUtils.GetConfigFilePath(_log4NetConfigFileName, _configDir,
+					out List<string> searchedDirs);
 
-				// Surely there must be a better way... or use log4net console configuration
-				builder.AddFilter(
-					(provider, _, logLevel) =>
-						!provider.Contains("ConsoleLoggerProvider")
-						|| logLevel >= LogLevel.Information);
-			});
-
-			Log.SetLoggerFactory(loggerFactory);
+			string logFileSuffix = _loadBalancerMode ? "load_balancer" : "cluster";
+			ConfigUtils.ConfigureLogging(log4NetPath, logFileSuffix);
 
 			_logger = Log.CreateLogger<Program>();
 
-			string logConfiguration = log4NetPath ?? "Console logging";
-
-			_logger.LogInformation("Logging configured based on {logConfig}", logConfiguration);
-		}
-
-		private static string GetLog4NetConfigPath()
-		{
-			string log4NetPath = null;
-
-			if (!string.IsNullOrEmpty(_configDir))
-			{
-				string path = Path.Combine(_configDir, _log4NetConfigFileName);
-
-				if (File.Exists(path))
-				{
-					return path;
-				}
-			}
-
-			if (File.Exists(_log4NetConfigFileName))
-			{
-				log4NetPath = _log4NetConfigFileName;
-			}
-			else if (File.Exists(Path.Combine(@"..", _log4NetConfigFileName)))
-			{
-				log4NetPath = Path.Combine(@"..", _log4NetConfigFileName);
-			}
-
-			return log4NetPath;
+			if (log4NetPath == null)
+				ConfigUtils.LogMissingConfigFile(_log4NetConfigFileName, searchedDirs);
 		}
 	}
 }

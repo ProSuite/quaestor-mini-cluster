@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Quaestor.Environment
@@ -68,31 +70,73 @@ namespace Quaestor.Environment
 			_logger.LogDebug("Currently used .NET Runtime: {netRuntime}", frameworkDescription);
 		}
 
-		public static string GetLog4NetConfigPath([NotNull] string log4NetConfigFileName,
-		                                          [CanBeNull] string configDir)
+		public static string GetConfigFilePath([NotNull] string configFileName,
+		                                       [CanBeNull] string configuredSearchDir,
+		                                       out List<string> searchedDirs)
 		{
-			string log4NetPath = null;
+			string result = null;
+			searchedDirs = new List<string>();
 
-			if (!string.IsNullOrEmpty(configDir))
+			if (TryFindFile(configuredSearchDir, out string fullPath, configFileName))
+				return fullPath;
+
+			searchedDirs.Add(configuredSearchDir);
+
+			string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+			string exeDir = Directory.GetParent(assemblyLocation)?.FullName;
+
+			if (TryFindFile(exeDir, out fullPath, configFileName))
+				return fullPath;
+
+			searchedDirs.Add(exeDir);
+
+			string oneUp = Directory.GetParent(exeDir)?.FullName;
+
+			if (TryFindFile(oneUp, out fullPath, configFileName))
+				return fullPath;
+
+			searchedDirs.Add(oneUp);
+
+			// For backward compatibility, check the current directory:
+			if (File.Exists(configFileName))
 			{
-				string path = Path.Combine(configDir, log4NetConfigFileName);
-
-				if (File.Exists(path))
-				{
-					return path;
-				}
+				result = configFileName;
 			}
 
-			if (File.Exists(log4NetConfigFileName))
+			searchedDirs.Add($"<current directory>");
+
+			return result;
+		}
+
+		public static void LogMissingConfigFile(string configFileName,
+		                                        List<string> searchedDirs)
+		{
+			_logger.LogWarning(
+				"The configuration file {configFile} was not found in any of the searched directories:",
+				configFileName);
+
+			foreach (string searchedDir in searchedDirs)
 			{
-				log4NetPath = log4NetConfigFileName;
+				_logger.LogInformation($"  - {searchedDir}");
 			}
-			else if (File.Exists(Path.Combine(@"..", log4NetConfigFileName)))
+		}
+
+		private static bool TryFindFile(string searchDir, out string result, string fileName)
+		{
+			result = null;
+
+			if (string.IsNullOrEmpty(searchDir))
+				return false;
+
+			string path = Path.Combine(searchDir, fileName);
+
+			if (File.Exists(path))
 			{
-				log4NetPath = Path.Combine(@"..", log4NetConfigFileName);
+				result = path;
+				return true;
 			}
 
-			return log4NetPath;
+			return false;
 		}
 	}
 }
