@@ -196,6 +196,12 @@ namespace Quaestor.LoadBalancing
 
 				qualifiedLocation.ServerStats.ServerUtilization =
 					hostLoads[qualifiedLocation.ServiceLocation.HostName];
+
+				QualifiedService lastReport = qualifiedServices.OrderByDescending(s => s.ReportDate)
+					.FirstOrDefault();
+
+				qualifiedLocation.ServerStats.ServerMemoryUsagePercent =
+					lastReport?.ServerStats?.ServerMemoryUsagePercent ?? 0;
 			}
 
 			var orderedLocations =
@@ -233,7 +239,8 @@ namespace Quaestor.LoadBalancing
 				}
 
 				var qualifiedLocation =
-					new QualifiedService(serviceLocation, loadReportResponse.ServerStats)
+					new QualifiedService(serviceLocation, loadReportResponse.ServerStats,
+						loadReportResponse.TimestampTicks)
 					{
 						KnownLoadRate = loadReportResponse.KnownLoadRate
 					};

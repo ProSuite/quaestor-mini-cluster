@@ -9,7 +9,7 @@ namespace Quaestor.LoadReporting
 	/// </summary>
 	public class ServiceLoad : IServiceLoad
 	{
-		DateTime? _lastGetCpuUsageTime;
+		private DateTime? _lastGetCpuUsageTime;
 		private TimeSpan _lastTotalProcessorTime;
 		private int _currentProcessCount;
 		private double _knownLoadRate = -1;
@@ -23,7 +23,7 @@ namespace Quaestor.LoadReporting
 			ResetCurrentProcessCount(initialProcessCount);
 
 			// Initialize last CPU time:
-			GetCpuUsage();
+			GetProcessCpuUsage();
 		}
 
 		/// <summary>
@@ -50,25 +50,44 @@ namespace Quaestor.LoadReporting
 		/// </summary>
 		public int CurrentProcessCount => _currentProcessCount;
 
+		/// <summary>
+		///     The server utilization (CPU usage) ratio
+		/// </summary>
 		public double ServerUtilization { get; set; }
+
+		/// <summary>
+		///     The host machine's memory usage percentage.
+		/// </summary>
+		public double ServerMemoryUsagePercent { get; set; }
+
+		/// <summary>
+		///     The time of the last memory usage measurement.
+		/// </summary>
+		public DateTime? LastUpdateTime { get; set; }
 
 		/// <summary>
 		///     Increments <see cref="CurrentProcessCount" />. This method is thread-safe.
 		/// </summary>
-		public void StartRequest()
+		public void StartRequest(double? machineMemoryUsagePercent = null)
 		{
 			Interlocked.Increment(ref _currentProcessCount);
+
+			ServerMemoryUsagePercent = machineMemoryUsagePercent ?? -1;
+			LastUpdateTime = DateTime.Now;
 		}
 
 		/// <summary>
 		///     Decrements <see cref="CurrentProcessCount" />. This method is thread-safe.
 		/// </summary>
-		public void EndRequest()
+		public void EndRequest(double? machineMemoryUsagePercent = null)
 		{
 			Interlocked.Decrement(ref _currentProcessCount);
+
+			ServerMemoryUsagePercent = machineMemoryUsagePercent ?? -1;
+			LastUpdateTime = DateTime.Now;
 		}
 
-		public double GetCpuUsage()
+		public double GetProcessCpuUsage()
 		{
 			Process p = Process.GetCurrentProcess();
 
@@ -144,7 +163,21 @@ namespace Quaestor.LoadReporting
 		{
 			return
 				$"{CurrentProcessCount} of {ProcessCapacity} ongoing requests, " +
-				$"server utilization: {ServerUtilization}";
+				$"server utilization: {ServerUtilization}, " +
+				$"memory usage: {ServerMemoryUsagePercent}%";
 		}
+
+		// TODO: Once .NET framework is left behind or we switch to multi-targeting
+//		public double GetMemoryUsage()
+//		{
+//#if NET6_OR_GREATER
+
+//			GCMemoryInfo gcMemoryInfo = GC.GetGCMemoryInfo();
+//			double memoryUsagePct =
+//				(double)gcMemoryInfo.MemoryLoadBytes /
+//				gcMemoryInfo.TotalAvailableMemoryBytes * 100;
+
+//#endif
+//		}
 	}
 }

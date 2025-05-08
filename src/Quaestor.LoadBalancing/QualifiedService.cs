@@ -42,13 +42,18 @@ namespace Quaestor.LoadBalancing
 		}
 
 		public QualifiedService([NotNull] ServiceLocation serviceLocation,
-		                        ServerStats serverStats)
+		                        ServerStats serverStats,
+		                        long reportTimeTicks)
 		{
 			ServiceLocation = serviceLocation;
 			ServerStats = serverStats;
 
+			ReportDate = new TimeSpan(reportTimeTicks);
+
 			IsHealthy = ServerStats != null;
 		}
+
+		public TimeSpan ReportDate { get; set; }
 
 		public double KnownLoadRate { get; set; } = -1;
 

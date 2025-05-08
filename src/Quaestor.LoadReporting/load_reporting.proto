@@ -37,7 +37,8 @@ message LoadReportRequest {
   */
 message LoadReportResponse {
 
-	/** The time of creation or the last report. */
+	/** The time of the last update to the server stats, i.e. last update of 
+	  * the report's actual content. */
 	int64 timestamp_ticks = 1;
 
 	/** The known load rate by which the available services should be prioritized.
@@ -70,5 +71,10 @@ message ServerStats {
 	  * the last report in the range [0.0 - 1.0].
 		*/
 	double server_utilization = 3;
+
+	/** The host machine memory usage, as a percentage of the used memory vs total 
+	  * memory [0.0 - 100.0].
+		*/
+	double server_memory_usage_percent = 4;
 }
 

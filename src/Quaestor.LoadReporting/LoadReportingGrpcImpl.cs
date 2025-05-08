@@ -52,12 +52,13 @@ namespace Quaestor.LoadReporting
 							$"Service {request.ServiceName} has no load.")));
 				}
 
-				result.TimestampTicks = currentLoad.ReportStart.Ticks;
 				result.KnownLoadRate = currentLoad.KnownLoadRate;
 
 				serverStats.RequestCapacity = currentLoad.ProcessCapacity;
 				serverStats.CurrentRequests = currentLoad.CurrentProcessCount;
 				serverStats.ServerUtilization = currentLoad.ServerUtilization;
+				serverStats.ServerMemoryUsagePercent = currentLoad.ServerMemoryUsagePercent;
+				result.TimestampTicks = currentLoad.LastUpdateTime?.Ticks ?? 0;
 
 				currentLoad.ResetReportStart();
 			}
