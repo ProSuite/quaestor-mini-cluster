@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+/**
+ * The process and request administration service definition and its associated 
+ * request and response message types.
+ *
+ */
+
+package Quaestor.ProcessAdministration;
+
+
+/**
+  * The shutdown API.
+  */
+service ProcessAdministrationGrpc {
+
+  /**
+    * Cancels an individual (long-running) request.
+    */
+  rpc Cancel(CancelRequest) returns (CancelResponse) {}
+
+  /**
+    * The standard health check.
+    */
+  //rpc Stop(StopRequest) returns (StopResponse) {}
+
+  /**
+    * Starts the requested service after it has been paused.
+    */
+  //rpc Start(StartRequest) returns (StartResponse) {}
+
+  /**
+    * Gets metadata on the server process, such as the software version.
+    */
+  //rpc GetInfo(GetInfoRequest) returns (GetInfoResponse)
+
+    /**
+    * Sets the log level on the server process (Verbose, Debug, Info).
+    */
+  //rpc SetLogLevel(GetInfoRequest) returns (GetInfoResponse)
+}
+
+message CancelRequest {
+
+  /** The DDX environment. */
+  string environment = 1;
+
+  /** The service name. */
+  string service_name = 2;
+
+  /** The user name provided by the client. */
+  string user_name = 3;
+
+  /** The token that authenticates the caller (not yet implemented). */
+  string password = 4;
+}
+
+message CancelResponse {
+
+  /** The result of the cancellation. */
+  bool success = 1;
+}
+
+/**
+  * The stop request.
+  */
+//message StopRequest {
+//
+//  /** The service name. If empty, the entire process is stopped. */
+//  string service_name = 1;
+//
+//  /** The stop type: 
+//    * 1 (pause): stop  serving
+//    * 2 (shutdown): regular and clean shutdown, waiting for current requests to finish.
+//    * 3 (abort): immediate halt */
+//  enum StopType {
+//    UNKNOWN = 0;
+//    PAUSE = 1;
+//    SHUTDOWN = 2;
+//    ABORT = 3;
+//  }
+//
+//  StopType stop_type = 2;
+//
+//  /** The secret string that allows the shutdown. */
+//  string password = 3;
+//}
+
+/**
+  * The stop response.
+  */
+//message StopResponse {
+//
+//  /** The service name. */
+//  string service_name = 1;
+//}
+
+/**
+  * The start/resume request.
+  */
+//message StartRequest {
+//
+//  /** The service name. */
+//  string service_name = 1;
+//
+//  /** The secret string that allows the shutdown. */
+//  string password = 3;
+//}
+
+/**
+  * The start/resume response.
+  */
+//message StartResponse {
+
+  /** The service name. */
+//  string service_name = 1;
+//}

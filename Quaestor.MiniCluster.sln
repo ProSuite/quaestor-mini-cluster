@@ -46,6 +46,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.Cluster.Console", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quaestor.LoadBalancer.Console", "src\Quaestor.LoadBalancer.Console\Quaestor.LoadBalancer.Console.csproj", "{D7BDA766-46D4-41FC-90E1-8077ED7190CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quaestor.ProcessAdministration", "src\Quaestor.ProcessAdministration\Quaestor.ProcessAdministration.csproj", "{20093D7D-0338-2F08-61E2-16486B697926}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,10 @@ Global
 		{D7BDA766-46D4-41FC-90E1-8077ED7190CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7BDA766-46D4-41FC-90E1-8077ED7190CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7BDA766-46D4-41FC-90E1-8077ED7190CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20093D7D-0338-2F08-61E2-16486B697926}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20093D7D-0338-2F08-61E2-16486B697926}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20093D7D-0338-2F08-61E2-16486B697926}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20093D7D-0338-2F08-61E2-16486B697926}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -133,6 +139,7 @@ Global
 		{3B67F974-2724-454C-8932-FE0757CCAC73} = {42F39A18-2681-4FB2-B73D-A44A6E2EC068}
 		{783BD428-6DFC-427F-A2A9-57CCE2A6A2CB} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 		{D7BDA766-46D4-41FC-90E1-8077ED7190CA} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
+		{20093D7D-0338-2F08-61E2-16486B697926} = {C12CA5A1-BC58-4128-AA0A-53531D4D99FE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D4A5BDA-D4FC-4BDA-98A4-6C2669B5FFC0}
