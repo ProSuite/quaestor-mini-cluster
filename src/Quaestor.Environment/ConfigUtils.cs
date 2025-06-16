@@ -82,6 +82,8 @@ namespace Quaestor.Environment
 
 			searchedDirs.Add(configuredSearchDir);
 
+			// TODO: Add C:\ProgramData\Dira GeoSystems\Quaestor
+
 			string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 			string exeDir = Directory.GetParent(assemblyLocation)?.FullName;
 

@@ -45,8 +45,8 @@ Start the quaestor executable in cluster mode:
 
 ```sh
 # Start Quaestor in cluster mode:
-$ cd .\src\Quaestor.Console\bin\Debug\net6.0
-$ quaestor cluster
+$ cd .\src\Quaestor.Cluster.Console\bin\Debug\net6.0
+$ quaestor-cluster
 ```
 This starts 4 worker processes and one load balancer process as configured in [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml). An alternative directory containing the configuration can be specified on the command line (use quaestor cluster --help for details).
 
@@ -122,8 +122,8 @@ the same distributed service registry and hence can serve all healthy service ad
 The load balancer service that is part of this cluster configuration can be tested with the following gRPCurl script (first download [gRPCurl](https://github.com/fullstorydev/grpcurl/releases) and make sure it is in the PATH environment variable):
 ```sh
 # For this example make sure the quaestor has been started in cluster mode:
-$ cd .\src\Quaestor.Console\bin\Debug\net6.0
-$ quaestor cluster
+$ cd .\src\Quaestor.Cluster.Console\bin\Debug\net6.0
+$ quaestor-cluster
 # Start a new powershell and cd to the quaestor-mini-cluster repository. Then:
 $ cd examples
 # All available service locations:
@@ -140,11 +140,16 @@ $ .\CheckHealth.ps1 localhost:5150 ServiceDiscoveryGrpc
 
 On Windows, the cluster process could be started by a windows service to make sure it is always running.
 ```sh
-# Adapt the quaestor.config.yml: Only use absolute paths that can be accessed by the local system account.
+# Adapt the quaestor.cluster.config.yml: Only use absolute paths that can be accessed by the local system account.
 # Adapt the logging configuration to contain no relative path or Userprofile environment var.
 # Open an elevated command prompt.
-# Replace the bin path and the --configDir directory in the following statement.
-$ sc create "QuaestorMiniCluster" binPath= "C:\data\git\quaestor-mini-cluster\build\output\Quaestor_0.0.6\quaestor.exe cluster --configDir C:\data\git\quaestor-mini-cluster\build\output\Quaestor_0.0.6" DisplayName= "Quaestor Mini Cluster"
+# Replace the bin path and the --configDir directory in the following statement (do not change the blank behind the = sign).
+sc create "QuaestorMiniCluster" binPath= "C:\Program Files\Quaestor\quaestor-cluster.exe" DisplayName= "Quaestor Mini Cluster"
+sc.exe config QuaestorMiniCluster binPath= "C:\Program Files\Quaestor\quaestor-cluster.exe --configDir \"C:\ProgramData\Dira GeoSystems\Quaestor\""
+sc description QuaestorMiniCluster "Cluster Manager for ProSuite QA Microservices"
+
+# To delete the service, use:
+sc delete "QuaestorMiniCluster"
 ```
 
 The service' startup type could be set to auto and the recovery settings could be set to restart to make sure it will always run.
