@@ -18,7 +18,7 @@ license = {text = "MIT"}
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "grpcio-tools>=1.62.3",
     "pytest>=8.3.5",
