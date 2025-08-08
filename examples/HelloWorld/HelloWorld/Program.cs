@@ -71,7 +71,7 @@ namespace HelloWorld
 				throw new InvalidOperationException("Cannot get directory of executing assembly.");
 			}
 
-			const string targetFramework = "net6.0";
+			const string targetFramework = "net8.0";
 			const string buildConfiguration = "Debug";
 
 			string exePath = Path.Combine(assemblyDir, @"..\..\..\..",

@@ -71,7 +71,7 @@ clusterConfig:
 agents:
   Worker:
     # The (absolute or relative) path to the executable
-    executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net6.0\WorkerProcess.exe
+    executablePath: ..\..\..\..\..\examples\HelloWorld\WorkerProcess\bin\Debug\net8.0\WorkerProcess.exe
     # The command line arguments. {HostName} and {Port} will be replaced by the respective values 
     # defined below.
     commandLineArguments: "{Port} 100"
