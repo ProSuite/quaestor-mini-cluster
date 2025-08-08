@@ -24,8 +24,7 @@ namespace Quaestor.LoadBalancing
 		// NOTE: It is good for performance to re-use channels
 		[NotNull] private readonly ConcurrentDictionary<ServiceLocation, Channel> _channelCache;
 
-		private readonly ILogger<ServiceDiscoveryGrpcImpl> _logger =
-			Log.CreateLogger<ServiceDiscoveryGrpcImpl>();
+		private readonly ILogger<ServiceEvaluator> _logger = Log.CreateLogger<ServiceEvaluator>();
 
 		private Exception _lastException;
 
