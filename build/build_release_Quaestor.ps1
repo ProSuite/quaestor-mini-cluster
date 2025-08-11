@@ -3,7 +3,10 @@ Param(
 	$TargetFramework = 'net8.0'
 )
 
-$OutputDir = ".\output\Quaestor_${version}_for_${netVersion}"
+$xml = [Xml] (Get-Content ..\src\Directory.Build.props)
+$version = [Version] $xml.Project.PropertyGroup.Version
+
+$OutputDir = ".\output\Quaestor_${version}"
 
 Write-Host "`n`Building Quaestor $TargetFramework to $OutputDir *****************************************************************" -ForegroundColor 'Green'
 
