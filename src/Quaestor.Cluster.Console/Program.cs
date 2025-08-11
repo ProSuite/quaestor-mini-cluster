@@ -26,6 +26,9 @@ namespace Quaestor.Cluster.Console
 			var parsedArgs = Parser.Default
 				.ParseArguments<QuaestorClusterOptions>(args);
 
+			// --help or any other invalid arguments;
+			parsedArgs.WithNotParsed(opts => System.Environment.Exit(-1));
+
 			parsedArgs.WithParsed(opts => SetOptions(opts));
 
 			try
