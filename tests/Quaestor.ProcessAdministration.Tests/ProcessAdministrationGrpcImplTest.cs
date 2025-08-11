@@ -53,6 +53,15 @@ namespace Quaestor.ProcessAdministration.Tests
 			Assert.IsTrue(cancelResponse.Success);
 
 			_requestAdmin.UnregisterRequest(cancelableRequest);
+
+			cancelResponse = client.Cancel(new CancelRequest()
+			{
+				Environment = "Test",
+				ServiceName = ServiceName,
+				UserName = "TestUser",
+			});
+
+			Assert.IsFalse(cancelResponse.Success);
 		}
 
 		//[Test]

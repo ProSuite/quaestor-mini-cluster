@@ -24,14 +24,14 @@ namespace Quaestor.ProcessAdministration
 				throw new InvalidOperationException("Request admin has not been initialized.");
 			}
 
-			RequestAdmin.CancelRequest(request.UserName, request.Environment);
+			bool cancelled = RequestAdmin.CancelRequest(request.UserName, request.Environment);
 
 			return Task.FromResult(new CancelResponse
 			{
-				Success = true
+				Success = cancelled
 			});
 		}
-
+		
 		#endregion
 	}
 }

@@ -23,23 +23,28 @@ namespace Quaestor.ProcessAdministration
 
 		#region Implementation of IRequestAdmin
 
-		public void CancelAllRequests()
+		public bool CancelAllRequests()
 		{
 			Log($"[CancelAllRequests] Cancelling {_requests.Count} requests");
 
+			bool result = false;
 			foreach (CancelableRequest request in _requests)
 			{
 				Log($"Cancelling: User='{request.RequestUserName}', " +
 				    $"Environment='{request.Environment}'");
 
 				request.CancellationSource.Cancel();
+				result = true;
 			}
+
+			return result;
 		}
 
-		public void CancelRequest(string requestUserName, string environment)
+		public bool CancelRequest(string requestUserName, string environment)
 		{
 			LogCancelRequest(requestUserName, environment);
 
+			bool result = false;
 			foreach (CancelableRequest request in _requests)
 			{
 				if (request.RequestUserName == requestUserName &&
@@ -47,8 +52,12 @@ namespace Quaestor.ProcessAdministration
 				{
 					Log(" Match found → Cancelling now...");
 					request.CancellationSource.Cancel();
+
+					result = true;
 				}
 			}
+
+			return result;
 		}
 
 		public CancelableRequest RegisterRequest(string requestUserName, string environment,

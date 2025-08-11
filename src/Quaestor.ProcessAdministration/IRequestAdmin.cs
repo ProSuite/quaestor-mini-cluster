@@ -4,9 +4,9 @@ namespace Quaestor.ProcessAdministration
 {
 	public interface IRequestAdmin
 	{
-		void CancelAllRequests();
+		bool CancelAllRequests();
 
-		void CancelRequest(string requestUserName,
+		bool CancelRequest(string requestUserName,
 		                   string environment);
 
 		CancelableRequest RegisterRequest(string requestUserName,
