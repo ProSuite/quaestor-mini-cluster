@@ -1,6 +1,6 @@
 
 Param(
-	$TargetFramework = 'net6.0'
+	$TargetFramework = 'net8.0'
 )
 
 $OutputDir = ".\output\Quaestor_${version}_for_${netVersion}"

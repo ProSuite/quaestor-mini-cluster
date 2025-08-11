@@ -45,7 +45,7 @@ Start the quaestor executable in cluster mode:
 
 ```sh
 # Start Quaestor in cluster mode:
-$ cd .\src\Quaestor.Cluster.Console\bin\Debug\net6.0
+$ cd .\src\Quaestor.Cluster.Console\bin\Debug\net8.0
 $ quaestor-cluster
 ```
 This starts 4 worker processes and one load balancer process as configured in [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml). An alternative directory containing the configuration can be specified on the command line (use quaestor cluster --help for details).
@@ -104,7 +104,7 @@ The load balancer can be used independently from the cluster manager. The releva
 
 ```sh
 # Start Quaestor in load balancer mode:
-$ cd .\src\Quaestor.Console\bin\Debug\net6.0
+$ cd .\src\Quaestor.Console\bin\Debug\net8.0
 $ quaestor load-balancer
 ```
 
@@ -122,7 +122,7 @@ the same distributed service registry and hence can serve all healthy service ad
 The load balancer service that is part of this cluster configuration can be tested with the following gRPCurl script (first download [gRPCurl](https://github.com/fullstorydev/grpcurl/releases) and make sure it is in the PATH environment variable):
 ```sh
 # For this example make sure the quaestor has been started in cluster mode:
-$ cd .\src\Quaestor.Cluster.Console\bin\Debug\net6.0
+$ cd .\src\Quaestor.Cluster.Console\bin\Debug\net8.0
 $ quaestor-cluster
 # Start a new powershell and cd to the quaestor-mini-cluster repository. Then:
 $ cd examples
