@@ -37,20 +37,22 @@ Once the solution has been built, a simple [example cluster](https://github.com/
 $ dotnet run --project .\examples\HelloWorld\HelloWorld\HelloWorld.csproj
 ```
 
-By default the cluster heartbeats every 30 seconds and checks if the process responds and is still healthy. The sample worker process starts reporting as unhealthy after 100 seconds and will then be restarted by quaestor.
+By default the cluster heartbeats every 30 seconds and checks if the process responds and is still healthy. The sample worker process starts reporting as unhealthy after 100 seconds and will then be restarted by quaestor. The quaestor cluster detects the unhealthy processes and re-starts them according to the configuration.
 
 ### Command Line Example
 
-Start the quaestor executable in cluster mode:
+## Cluster management
+
+Start the quaestor cluster:
 
 ```sh
-# Start Quaestor in cluster mode:
+# Start Quaestor cluster:
 $ cd .\src\Quaestor.Cluster.Console\bin\Debug\net8.0
 $ quaestor-cluster
 ```
-This starts 4 worker processes and one load balancer process as configured in [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml). An alternative directory containing the configuration can be specified on the command line (use quaestor cluster --help for details).
+This starts 4 worker processes and one load balancer process as configured in [quaestor.cluster.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Cluster.Console/quaestor.cluster.config.yml). An alternative directory containing the configuration can be specified on the command line (use quaestor cluster --help for details).
 
-This example also includes a basic load balancer implementation which can be tested using [external monitoring with gRPCurl](### External monitoring with gRPCurl).
+This example also includes a basic load balancer implementation which can be tested using [external monitoring with gRPCurl](#external-monitoring-with-grpcurl).
 
 Stop the cluster (and shutdown the processes) with CTRL+C.
 
@@ -100,10 +102,10 @@ From the [WorkerProcess](https://github.com/ProSuite/quaestor-mini-cluster/blob/
 
 ### Load Balancer Command Line
 
-The load balancer can be used independently from the cluster manager. The relevant section in the [quaestor.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.Console/quaestor.config.yml) is right at the beginning.
+The load balancer can be used independently from the cluster manager. The configuration is in [quaestor.loadbalancer.config.yml](https://github.com/ProSuite/quaestor-mini-cluster/blob/main/src/Quaestor.LoadBalancer.Console/quaestor.loadbalancer.config.yml).
 
 ```sh
-# Start Quaestor in load balancer mode:
+# Start the Quaestor load balancer:
 $ cd .\src\Quaestor.Console\bin\Debug\net8.0
 $ quaestor load-balancer
 ```

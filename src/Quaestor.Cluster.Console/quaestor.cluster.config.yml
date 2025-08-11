@@ -74,7 +74,7 @@ agents:
     excludeFromServiceRegistry: false
 
   - agentType: LoadBalancer
-    executablePath: quaestor-loadbalancer.exe
+    executablePath: ..\..\..\..\..\src\Quaestor.LoadBalancer.Console\bin\Debug\net8.0\quaestor-loadbalancer.exe
     commandLineArguments:
     processCount: 1
     clusterShutdownAction: Kill
