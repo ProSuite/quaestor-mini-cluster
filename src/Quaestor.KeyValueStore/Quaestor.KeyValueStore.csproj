@@ -12,7 +12,7 @@
   <ItemGroup>
     <PackageReference Include="dotnet-etcd" Version="4.2" />
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
